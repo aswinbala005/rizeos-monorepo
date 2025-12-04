@@ -1,30 +1,38 @@
 package main
 
 import (
-    "log"
-    "os"
+	"log"
 
-    "github.com/gofiber/fiber/v2"
-    "github.com/gofiber/fiber/v2/middleware/cors"
-    "github.com/gofiber/fiber/v2/middleware/logger"
-    "github.com/joho/godotenv"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+
+	// Import our packages
+	"github.com/aswinbala005/rizeos/api/internal/config"
+	"github.com/aswinbala005/rizeos/api/internal/db" // <-- This line was likely missing or incorrect
 )
 
 func main() {
-    // 1. Load Environment Variables
-    // It's okay if .env doesn't exist yet (for production)
-    if err := godotenv.Load(); err != nil {
-        log.Println("No .env file found")
+    // 1. Load Configuration
+    cfg, err := config.LoadConfig()
+    if err != nil {
+        log.Fatalf("Failed to load configuration: %v", err)
     }
 
-    // 2. Initialize Fiber App
+    // 2. Connect to Database (This is now active)
+    _, err = db.ConnectDB(cfg.DatabaseURL)
+    if err != nil {
+        log.Fatalf("Database connection failed: %v", err)
+    }
+
+    // 3. Initialize Fiber App
     app := fiber.New()
 
-    // 3. Middleware
-    app.Use(logger.New()) // Log requests
-    app.Use(cors.New())   // Allow Frontend to talk to Backend
+    // 4. Middleware
+    app.Use(logger.New())
+    app.Use(cors.New())
 
-    // 4. Routes
+    // 5. Routes
     app.Get("/health", func(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{
             "status":  "ok",
@@ -32,12 +40,7 @@ func main() {
         })
     })
 
-    // 5. Start Server
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8080"
-    }
-    
-    log.Printf("Server starting on port %s", port)
-    log.Fatal(app.Listen(":" + port))
+    // 6. Start Server
+    log.Printf("Server starting on port %s", cfg.Port)
+    log.Fatal(app.Listen(":" + cfg.Port))
 }
