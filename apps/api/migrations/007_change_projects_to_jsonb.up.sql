@@ -1,0 +1,1 @@
+ALTER TABLE users ALTER COLUMN projects TYPE JSONB USING projects::jsonb;
