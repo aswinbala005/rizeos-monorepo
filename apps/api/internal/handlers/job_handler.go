@@ -41,7 +41,6 @@ type CreateJobRequest struct {
 	SalaryMin       int32  `json:"salary_min"`
 	SalaryMax       int32  `json:"salary_max"`
 	Currency        string `json:"currency"`
-	Benefits        string `json:"benefits"`
 	JobType         string `json:"job_type"`
 	LocationType    string `json:"location_type"`
 	LocationCity    string `json:"location_city"`
@@ -77,8 +76,6 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 		Currency:              pgtype.Text{String: req.Currency, Valid: true},
 		ExperienceMin:         pgtype.Int4{Int32: req.ExperienceMin, Valid: true},
 		ExperienceMax:         pgtype.Int4{Int32: req.ExperienceMax, Valid: true},
-		Benefits:              pgtype.Text{String: req.Benefits, Valid: true},
-		Requirements:          pgtype.Text{String: "", Valid: true},
 	}
 	job, err := h.queries.CreateJob(c.Context(), arg)
 	if err != nil {

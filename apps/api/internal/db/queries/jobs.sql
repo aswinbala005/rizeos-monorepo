@@ -1,12 +1,12 @@
 -- name: CreateJob :one
 INSERT INTO jobs (
-  recruiter_id, title, description, requirements, is_paid,
+  recruiter_id, title, description, is_paid,
   job_type, location_type, location_city, salary_min, salary_max, currency,
-  experience_min, experience_max, benefits,
+  experience_min, experience_max,
   job_summary, education_requirements, skills_requirements, is_unpaid,
   recruiter_email
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
 )
 RETURNING id, recruiter_id, title, description, is_paid, created_at, updated_at;
 

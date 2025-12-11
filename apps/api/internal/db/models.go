@@ -80,8 +80,6 @@ type Job struct {
 	Currency              pgtype.Text        `json:"currency"`
 	ExperienceMin         pgtype.Int4        `json:"experience_min"`
 	ExperienceMax         pgtype.Int4        `json:"experience_max"`
-	Benefits              pgtype.Text        `json:"benefits"`
-	Requirements          pgtype.Text        `json:"requirements"`
 	JobSummary            pgtype.Text        `json:"job_summary"`
 	EducationRequirements pgtype.Text        `json:"education_requirements"`
 	SkillsRequirements    pgtype.Text        `json:"skills_requirements"`

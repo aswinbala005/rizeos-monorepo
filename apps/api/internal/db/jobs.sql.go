@@ -22,13 +22,13 @@ func (q *Queries) CloseJob(ctx context.Context, id pgtype.UUID) error {
 
 const createJob = `-- name: CreateJob :one
 INSERT INTO jobs (
-  recruiter_id, title, description, requirements, is_paid,
+  recruiter_id, title, description, is_paid,
   job_type, location_type, location_city, salary_min, salary_max, currency,
-  experience_min, experience_max, benefits,
+  experience_min, experience_max,
   job_summary, education_requirements, skills_requirements, is_unpaid,
   recruiter_email
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
 )
 RETURNING id, recruiter_id, title, description, is_paid, created_at, updated_at
 `
@@ -37,7 +37,6 @@ type CreateJobParams struct {
 	RecruiterID           pgtype.UUID `json:"recruiter_id"`
 	Title                 string      `json:"title"`
 	Description           string      `json:"description"`
-	Requirements          pgtype.Text `json:"requirements"`
 	IsPaid                pgtype.Bool `json:"is_paid"`
 	JobType               pgtype.Text `json:"job_type"`
 	LocationType          pgtype.Text `json:"location_type"`
@@ -47,7 +46,6 @@ type CreateJobParams struct {
 	Currency              pgtype.Text `json:"currency"`
 	ExperienceMin         pgtype.Int4 `json:"experience_min"`
 	ExperienceMax         pgtype.Int4 `json:"experience_max"`
-	Benefits              pgtype.Text `json:"benefits"`
 	JobSummary            pgtype.Text `json:"job_summary"`
 	EducationRequirements pgtype.Text `json:"education_requirements"`
 	SkillsRequirements    pgtype.Text `json:"skills_requirements"`
@@ -70,7 +68,6 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (CreateJob
 		arg.RecruiterID,
 		arg.Title,
 		arg.Description,
-		arg.Requirements,
 		arg.IsPaid,
 		arg.JobType,
 		arg.LocationType,
@@ -80,7 +77,6 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (CreateJob
 		arg.Currency,
 		arg.ExperienceMin,
 		arg.ExperienceMax,
-		arg.Benefits,
 		arg.JobSummary,
 		arg.EducationRequirements,
 		arg.SkillsRequirements,
@@ -146,7 +142,7 @@ func (q *Queries) GetJobApplicationCounts(ctx context.Context, recruiterID pgtyp
 }
 
 const getJobByID = `-- name: GetJobByID :one
-SELECT id, recruiter_id, title, description, is_paid, created_at, updated_at, job_type, location_type, location_city, salary_min, salary_max, currency, experience_min, experience_max, benefits, requirements, job_summary, education_requirements, skills_requirements, is_unpaid, recruiter_email, status FROM jobs WHERE id = $1 LIMIT 1
+SELECT id, recruiter_id, title, description, is_paid, created_at, updated_at, job_type, location_type, location_city, salary_min, salary_max, currency, experience_min, experience_max, job_summary, education_requirements, skills_requirements, is_unpaid, recruiter_email, status FROM jobs WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
@@ -168,8 +164,6 @@ func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
 		&i.Currency,
 		&i.ExperienceMin,
 		&i.ExperienceMax,
-		&i.Benefits,
-		&i.Requirements,
 		&i.JobSummary,
 		&i.EducationRequirements,
 		&i.SkillsRequirements,

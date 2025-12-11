@@ -21,6 +21,8 @@ ALTER TABLE jobs DROP COLUMN IF EXISTS embedding;
 ALTER TABLE jobs DROP COLUMN IF EXISTS gateway_question;
 ALTER TABLE jobs DROP COLUMN IF EXISTS languages;
 ALTER TABLE jobs DROP COLUMN IF EXISTS work_conditions;
+ALTER TABLE jobs DROP COLUMN IF EXISTS benefits;
+ALTER TABLE jobs DROP COLUMN IF EXISTS requirements;
 
 -- Remove unused column from applications table
 ALTER TABLE applications DROP COLUMN IF EXISTS gateway_grade;
