@@ -42,14 +42,32 @@ async function handler(req: NextRequest) {
     });
 
     // 4. Handle Response
-    const data = await response.json();
+    const responseContentType = response.headers.get("content-type");
     
-    if (!response.ok) {
-      console.error(`❌ Backend Error (${response.status}):`, data);
-      return NextResponse.json(data, { status: response.status });
-    }
+    // Check if response is JSON
+    if (responseContentType?.includes("application/json")) {
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error(`❌ Backend Error (${response.status}):`, data);
+        return NextResponse.json(data, { status: response.status });
+      }
 
-    return NextResponse.json(data, { status: 200 });
+      return NextResponse.json(data, { status: 200 });
+    } else {
+      // Non-JSON response (likely an error page or HTML)
+      const text = await response.text();
+      console.error(`❌ Backend returned non-JSON response (${response.status}):`, text.substring(0, 200));
+      
+      return NextResponse.json(
+        { 
+          error: "Backend error", 
+          message: "The API returned an unexpected response",
+          details: text.substring(0, 500)
+        },
+        { status: response.status || 500 }
+      );
+    }
 
   } catch (error) {
     console.error("🔥 Proxy Fatal Error:", error);
