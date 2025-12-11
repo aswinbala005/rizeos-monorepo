@@ -232,7 +232,10 @@ func (q *Queries) GetUserByWallet(ctx context.Context, walletAddress pgtype.Text
 }
 
 const searchCandidates = `-- name: SearchCandidates :many
-SELECT id, wallet_address, email, role, karma, is_pro, created_at, updated_at, full_name, password_hash, bio, skills, experience, projects, job_role, education, phone, organization_name, organization_location, organization_bio, professional_email FROM users 
+SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+       experience, projects, education, job_role, phone, organization_name, 
+       organization_location, organization_bio, professional_email, created_at, updated_at
+FROM users 
 WHERE role = 'CANDIDATE' 
   AND (
     to_tsvector('english', 
@@ -249,37 +252,57 @@ WHERE role = 'CANDIDATE'
 LIMIT 20
 `
 
-func (q *Queries) SearchCandidates(ctx context.Context, websearchToTsquery string) ([]User, error) {
+type SearchCandidatesRow struct {
+	ID                   pgtype.UUID        `json:"id"`
+	WalletAddress        pgtype.Text        `json:"wallet_address"`
+	Email                pgtype.Text        `json:"email"`
+	Role                 UserRole           `json:"role"`
+	FullName             pgtype.Text        `json:"full_name"`
+	PasswordHash         pgtype.Text        `json:"password_hash"`
+	Bio                  pgtype.Text        `json:"bio"`
+	Skills               pgtype.Text        `json:"skills"`
+	Experience           pgtype.Text        `json:"experience"`
+	Projects             []byte             `json:"projects"`
+	Education            pgtype.Text        `json:"education"`
+	JobRole              pgtype.Text        `json:"job_role"`
+	Phone                pgtype.Text        `json:"phone"`
+	OrganizationName     pgtype.Text        `json:"organization_name"`
+	OrganizationLocation pgtype.Text        `json:"organization_location"`
+	OrganizationBio      pgtype.Text        `json:"organization_bio"`
+	ProfessionalEmail    pgtype.Text        `json:"professional_email"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) SearchCandidates(ctx context.Context, websearchToTsquery string) ([]SearchCandidatesRow, error) {
 	rows, err := q.db.Query(ctx, searchCandidates, websearchToTsquery)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []SearchCandidatesRow
 	for rows.Next() {
-		var i User
+		var i SearchCandidatesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.WalletAddress,
 			&i.Email,
 			&i.Role,
-			&i.Karma,
-			&i.IsPro,
-			&i.CreatedAt,
-			&i.UpdatedAt,
 			&i.FullName,
 			&i.PasswordHash,
 			&i.Bio,
 			&i.Skills,
 			&i.Experience,
 			&i.Projects,
-			&i.JobRole,
 			&i.Education,
+			&i.JobRole,
 			&i.Phone,
 			&i.OrganizationName,
 			&i.OrganizationLocation,
 			&i.OrganizationBio,
 			&i.ProfessionalEmail,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -307,7 +330,9 @@ SET
   job_role = COALESCE($11, job_role),
   professional_email = COALESCE($12, professional_email) -- <-- NEW
 WHERE id = $1
-RETURNING id, wallet_address, email, role, karma, is_pro, created_at, updated_at, full_name, password_hash, bio, skills, experience, projects, job_role, education, phone, organization_name, organization_location, organization_bio, professional_email
+RETURNING id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+          experience, projects, education, job_role, phone, organization_name, 
+          organization_location, organization_bio, professional_email, created_at, updated_at
 `
 
 type UpdateRecruiterProfileParams struct {
@@ -325,7 +350,29 @@ type UpdateRecruiterProfileParams struct {
 	ProfessionalEmail    pgtype.Text `json:"professional_email"`
 }
 
-func (q *Queries) UpdateRecruiterProfile(ctx context.Context, arg UpdateRecruiterProfileParams) (User, error) {
+type UpdateRecruiterProfileRow struct {
+	ID                   pgtype.UUID        `json:"id"`
+	WalletAddress        pgtype.Text        `json:"wallet_address"`
+	Email                pgtype.Text        `json:"email"`
+	Role                 UserRole           `json:"role"`
+	FullName             pgtype.Text        `json:"full_name"`
+	PasswordHash         pgtype.Text        `json:"password_hash"`
+	Bio                  pgtype.Text        `json:"bio"`
+	Skills               pgtype.Text        `json:"skills"`
+	Experience           pgtype.Text        `json:"experience"`
+	Projects             []byte             `json:"projects"`
+	Education            pgtype.Text        `json:"education"`
+	JobRole              pgtype.Text        `json:"job_role"`
+	Phone                pgtype.Text        `json:"phone"`
+	OrganizationName     pgtype.Text        `json:"organization_name"`
+	OrganizationLocation pgtype.Text        `json:"organization_location"`
+	OrganizationBio      pgtype.Text        `json:"organization_bio"`
+	ProfessionalEmail    pgtype.Text        `json:"professional_email"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) UpdateRecruiterProfile(ctx context.Context, arg UpdateRecruiterProfileParams) (UpdateRecruiterProfileRow, error) {
 	row := q.db.QueryRow(ctx, updateRecruiterProfile,
 		arg.ID,
 		arg.FullName,
@@ -340,29 +387,27 @@ func (q *Queries) UpdateRecruiterProfile(ctx context.Context, arg UpdateRecruite
 		arg.JobRole,
 		arg.ProfessionalEmail,
 	)
-	var i User
+	var i UpdateRecruiterProfileRow
 	err := row.Scan(
 		&i.ID,
 		&i.WalletAddress,
 		&i.Email,
 		&i.Role,
-		&i.Karma,
-		&i.IsPro,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.FullName,
 		&i.PasswordHash,
 		&i.Bio,
 		&i.Skills,
 		&i.Experience,
 		&i.Projects,
-		&i.JobRole,
 		&i.Education,
+		&i.JobRole,
 		&i.Phone,
 		&i.OrganizationName,
 		&i.OrganizationLocation,
 		&i.OrganizationBio,
 		&i.ProfessionalEmail,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -380,7 +425,9 @@ SET
   job_role = COALESCE($8, job_role),
   professional_email = COALESCE($9, professional_email) -- <-- NEW
 WHERE id = $1
-RETURNING id, wallet_address, email, role, karma, is_pro, created_at, updated_at, full_name, password_hash, bio, skills, experience, projects, job_role, education, phone, organization_name, organization_location, organization_bio, professional_email
+RETURNING id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+          experience, projects, education, job_role, phone, organization_name, 
+          organization_location, organization_bio, professional_email, created_at, updated_at
 `
 
 type UpdateSeekerProfileParams struct {
@@ -395,7 +442,29 @@ type UpdateSeekerProfileParams struct {
 	ProfessionalEmail pgtype.Text `json:"professional_email"`
 }
 
-func (q *Queries) UpdateSeekerProfile(ctx context.Context, arg UpdateSeekerProfileParams) (User, error) {
+type UpdateSeekerProfileRow struct {
+	ID                   pgtype.UUID        `json:"id"`
+	WalletAddress        pgtype.Text        `json:"wallet_address"`
+	Email                pgtype.Text        `json:"email"`
+	Role                 UserRole           `json:"role"`
+	FullName             pgtype.Text        `json:"full_name"`
+	PasswordHash         pgtype.Text        `json:"password_hash"`
+	Bio                  pgtype.Text        `json:"bio"`
+	Skills               pgtype.Text        `json:"skills"`
+	Experience           pgtype.Text        `json:"experience"`
+	Projects             []byte             `json:"projects"`
+	Education            pgtype.Text        `json:"education"`
+	JobRole              pgtype.Text        `json:"job_role"`
+	Phone                pgtype.Text        `json:"phone"`
+	OrganizationName     pgtype.Text        `json:"organization_name"`
+	OrganizationLocation pgtype.Text        `json:"organization_location"`
+	OrganizationBio      pgtype.Text        `json:"organization_bio"`
+	ProfessionalEmail    pgtype.Text        `json:"professional_email"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) UpdateSeekerProfile(ctx context.Context, arg UpdateSeekerProfileParams) (UpdateSeekerProfileRow, error) {
 	row := q.db.QueryRow(ctx, updateSeekerProfile,
 		arg.ID,
 		arg.FullName,
@@ -407,29 +476,27 @@ func (q *Queries) UpdateSeekerProfile(ctx context.Context, arg UpdateSeekerProfi
 		arg.JobRole,
 		arg.ProfessionalEmail,
 	)
-	var i User
+	var i UpdateSeekerProfileRow
 	err := row.Scan(
 		&i.ID,
 		&i.WalletAddress,
 		&i.Email,
 		&i.Role,
-		&i.Karma,
-		&i.IsPro,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.FullName,
 		&i.PasswordHash,
 		&i.Bio,
 		&i.Skills,
 		&i.Experience,
 		&i.Projects,
-		&i.JobRole,
 		&i.Education,
+		&i.JobRole,
 		&i.Phone,
 		&i.OrganizationName,
 		&i.OrganizationLocation,
 		&i.OrganizationBio,
 		&i.ProfessionalEmail,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

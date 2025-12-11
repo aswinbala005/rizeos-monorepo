@@ -37,7 +37,9 @@ SET
   job_role = COALESCE($8, job_role),
   professional_email = COALESCE($9, professional_email) -- <-- NEW
 WHERE id = $1
-RETURNING *;
+RETURNING id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+          experience, projects, education, job_role, phone, organization_name, 
+          organization_location, organization_bio, professional_email, created_at, updated_at;
 
 -- name: UpdateRecruiterProfile :one
 UPDATE users
@@ -55,10 +57,15 @@ SET
   job_role = COALESCE($11, job_role),
   professional_email = COALESCE($12, professional_email) -- <-- NEW
 WHERE id = $1
-RETURNING *;
+RETURNING id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+          experience, projects, education, job_role, phone, organization_name, 
+          organization_location, organization_bio, professional_email, created_at, updated_at;
 
 -- name: SearchCandidates :many
-SELECT * FROM users 
+SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+       experience, projects, education, job_role, phone, organization_name, 
+       organization_location, organization_bio, professional_email, created_at, updated_at
+FROM users 
 WHERE role = 'CANDIDATE' 
   AND (
     to_tsvector('english', 
