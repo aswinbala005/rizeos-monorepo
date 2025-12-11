@@ -179,8 +179,6 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 	}
 
-	var updatedUser db.User
-
 	if req.OrganizationName != "" || existingUser.Role == db.UserRoleRECRUITER {
 		// --- UPDATE RECRUITER ---
 		arg := db.UpdateRecruiterProfileParams{
@@ -197,7 +195,11 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 			JobRole:              pgtype.Text{String: req.JobRole, Valid: req.JobRole != ""},
 			ProfessionalEmail:    pgtype.Text{String: req.ProfessionalEmail, Valid: req.ProfessionalEmail != ""}, // <-- NEW
 		}
-		updatedUser, err = h.queries.UpdateRecruiterProfile(c.Context(), arg)
+		updatedUser, err := h.queries.UpdateRecruiterProfile(c.Context(), arg)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update user: " + err.Error()})
+		}
+		return c.JSON(updatedUser)
 	} else {
 		// --- UPDATE SEEKER ---
 		projectsJSON, _ := json.Marshal(req.Projects)
@@ -212,11 +214,10 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 			JobRole:           pgtype.Text{String: req.JobRole, Valid: req.JobRole != ""},
 			ProfessionalEmail: pgtype.Text{String: req.ProfessionalEmail, Valid: req.ProfessionalEmail != ""}, // <-- NEW
 		}
-		updatedUser, err = h.queries.UpdateSeekerProfile(c.Context(), arg)
+		updatedUser, err := h.queries.UpdateSeekerProfile(c.Context(), arg)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update user: " + err.Error()})
+		}
+		return c.JSON(updatedUser)
 	}
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update user: " + err.Error()})
-	}
-	return c.JSON(updatedUser)
 }
