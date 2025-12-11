@@ -89,7 +89,6 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	// Should not reach here, but return not found as fallback
 	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"exists": false})
 }
-}
 
 // --- CREATE USER ---
 type CreateUserRequest struct {
