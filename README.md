@@ -1,135 +1,250 @@
-# Turborepo starter
+Here is a comprehensive, professional, and extensively detailed `README.md` file tailored for your repository. You can copy and paste this directly into your root `README.md`.
 
-This Turborepo starter is maintained by the Turborepo core team.
+***
 
-## Using this example
+# RizeOS Monorepo (GrindLink)
 
-Run the following command:
+**The Proof-of-Skill Protocol & AI-Native Recruitment Platform**
 
-```sh
-npx create-turbo@latest
+RizeOS is a next-generation monorepo platform that bridges Web2 professional data with Web3 identity. It features autonomous AI recruiting agents, semantic job matching, decentralized identity (wallet-based auth), and a "Proof-of-Skill" community protocol.
+
+---
+
+## 📚 Table of Contents
+
+1. [Architecture Overview](#-architecture-overview)
+2. [Tech Stack](#-tech-stack)
+3. [Directory Structure](#-directory-structure)
+4. [Database Schema](#-database-schema)
+5. [Backend Documentation (API)](#-backend-documentation-appsapi)
+    - [Core Logic & Handlers](#core-logic--handlers)
+    - [AI & Smart Matching Algorithms](#ai--smart-matching-algorithms)
+6. [Frontend Documentation (Web)](#-frontend-documentation-appsweb)
+    - [Dashboards & Agents](#dashboards--agents)
+    - [Web3 Integration](#web3-integration)
+7. [Workflows & System Design](#-workflows--system-design)
+8. [Getting Started](#-getting-started)
+9. [Environment Variables](#-environment-variables)
+
+---
+
+## 🏛 Architecture Overview
+
+This project is a **Turborepo** monorepo containing a high-performance Go backend and a Next.js 14 frontend.
+
+*   **Hybrid Identity:** Users can login via Email/Password OR Crypto Wallet (Web3).
+*   **AI-First:** Resume parsing is handled by Large Language Models (Cerebras/Llama 3.3). Job matching uses custom tokenization and synonym mapping algorithms.
+*   **Clean Architecture:** The backend separates concerns into Configuration, Database (SQLC), Handlers (HTTP), and Services (External Logic).
+
+---
+
+## 🛠 Tech Stack
+
+### **Apps**
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Web** | Next.js 14 (App Router) | React framework with Server Components. |
+| **API** | Go (Golang) 1.25 | High-performance backend service. |
+
+### **Libraries & Tools**
+*   **Frontend:** TypeScript, Tailwind CSS, Shadcn UI, Framer Motion, Wagmi/Viem (Web3), Recharts (Analytics), UploadThing (Storage).
+*   **Backend:** Fiber (Web Framework), pgx (Postgres Driver), sqlc (Type-safe SQL), PDFParse, Cerebras SDK.
+*   **Database:** PostgreSQL 15+ with `pgvector` extension.
+*   **Build System:** Turborepo.
+
+---
+
+## 📂 Directory Structure
+
+```text
+aswinbala005-rizeos-monorepo/
+├── apps/
+│   ├── api/                        # Golang Backend Service
+│   │   ├── cmd/server/             # Entry point (main.go, server.go)
+│   │   ├── internal/
+│   │   │   ├── config/             # Environment variable loader
+│   │   │   ├── db/                 # Database connection & SQLC generated code
+│   │   │   │   └── queries/        # Raw SQL queries
+│   │   │   ├── handlers/           # HTTP Controllers (Business Logic)
+│   │   │   └── services/           # External integrations (AI, PDF)
+│   │   └── migrations/             # SQL migration files (Up/Down)
+│   └── web/                        # Next.js Frontend Application
+│       ├── app/                    # App Router (Pages & Layouts)
+│       │   ├── api/                # Next.js API Routes (Proxy & UploadThing)
+│       │   ├── dashboard/          # Protected Routes (Seeker/Recruiter)
+│       │   └── auth/               # Authentication Pages
+│       ├── components/             # Reusable UI Components
+│       ├── hooks/                  # Custom React Hooks (Data Fetching)
+│       └── providers/              # Context Providers (Web3, QueryClient)
+├── packages/                       # Shared Configs
+│   ├── eslint-config/              # Linting rules
+│   └── typescript-config/          # TSConfig bases
+└── turbo.json                      # Monorepo build pipeline config
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## 🗄 Database Schema
 
-### Apps and Packages
+The database is managed via SQL migrations located in `apps/api/migrations`.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### Key Tables
+1.  **`users`**
+    *   Stores both **Candidates** and **Recruiters**.
+    *   **Fields:** `wallet_address` (Unique), `email`, `role` (ENUM), `projects` (JSONB), `skills`, `embedding` (Vector).
+    *   **Recruiter Fields:** `organization_name`, `organization_bio`, `professional_email`.
+2.  **`jobs`**
+    *   **Fields:** `recruiter_id` (FK), `title`, `description`, `salary_min`, `salary_max`, `status` (OPEN/CLOSED).
+    *   **AI:** `embedding` column (Vector 384 dim) for semantic search.
+3.  **`applications`**
+    *   **Fields:** `job_id`, `candidate_id`, `status` (SENT, VIEWED, DECISION), `match_score` (0-100).
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+---
 
-### Utilities
+## 🔌 Backend Documentation (`apps/api`)
 
-This Turborepo has some additional tools already setup for you:
+The backend is built with **Go** and **Fiber**. It uses **sqlc** to generate type-safe Go code from raw SQL.
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+### Core Logic & Handlers (`internal/handlers`)
 
-### Build
+#### 1. `UserHandler` (`user_handler.go`)
+*   **`CreateUser`**: Registers users. Hashes passwords using `bcrypt`. Supports role assignment (CANDIDATE/RECRUITER).
+*   **`Login`**: Standard email/password authentication.
+*   **`GetUser`**: Dual-lookup strategy. Fetches user by `email` OR `wallet_address` (0x...).
+*   **`UpdateUser`**: Handles profile updates.
+    *   *Logic:* Splits logic based on role. Recruiters update organization details; Seekers update projects (stored as JSONB).
+*   **`SearchCandidates`**: **(Agent Feature)** Uses PostgreSQL Full-Text Search (`websearch_to_tsquery`) to find candidates based on natural language queries (e.g., "React developer with Go").
 
-To build all apps and packages, run the following command:
+#### 2. `JobHandler` (`job_handler.go`)
+*   **`CreateJob`**: Creates a job listing linked to a recruiter.
+*   **`ListJobs`**: Fetches all `OPEN` jobs.
+    *   **Smart Matching Logic**: When a candidate requests jobs, this handler calculates a `match_score` dynamically based on the overlap between Job Requirements and Candidate Skills/Role.
+*   **`ListJobsByRecruiter`**: Returns jobs owned by the authenticated recruiter.
+*   **`GetDashboardStats`**: Aggregates applicant counts per job for the Recruiter Dashboard.
 
+#### 3. `ApplicationHandler` (`application_handler.go`)
+*   **`ApplyToJob`**: Creates an application record.
+    *   *Workflow:* Fetches Job + Candidate details -> Calculates Match Score -> Saves to DB.
+*   **`GetApplicationVolume`**: Returns time-series data (daily application counts) for analytics charts.
+*   **`GetRecruiterApplications`**: Fetches *all* applications across *all* jobs for the "Faye" AI agent to screen.
+
+#### 4. `ResumeHandler` (`resume_handler.go`)
+*   **`ParseResume`**: The entry point for the AI Resume Parser.
+    *   *Input:* PDF URL.
+    *   *Process:* Downloads PDF -> Extracts Text -> Calls `ResumeService`.
+
+### AI & Smart Matching Algorithms
+
+#### **Resume Parsing (`internal/services/resume_service.go`)**
+*   **`ExtractTextFromPDF`**: Uses `ledongthuc/pdf` to convert PDF bytes to raw string.
+*   **`ParseResumeWithAI`**: Sends raw text to **Cerebras AI (Llama 3.3-70b)** with a strict system prompt to extract:
+    *   Full Name, Email, Bio.
+    *   Skills (Comma separated).
+    *   Projects (Array of Title/Summary).
+    *   *Output:* Returns a structured JSON object used to auto-fill frontend forms.
+
+#### **Smart Score Algorithm (`job_handler.go`)**
+A custom Go algorithm that scores candidates (0-100) against jobs:
+1.  **Tokenization**: Splits skills/titles into normalized tokens.
+2.  **Synonym Mapping**: Maps terms like "React" -> "Frontend", "ML" -> "AI".
+3.  **Scoring**:
+    *   **Role Match (50%)**: Direct or synonym match on Job Title.
+    *   **Skill Overlap (50%)**: Ratio of matching skills.
+    *   **Seniority Bonus**: Boosts score if "Senior" matches in both.
+
+---
+
+## 💻 Frontend Documentation (`apps/web`)
+
+Built with **Next.js 14**, utilizing the App Router and Server Components.
+
+### Dashboards & Agents
+
+#### **Recruiter Dashboard (`/dashboard/recruiter`)**
+*   **Analytics**: Visualizes hiring pipeline using `Recharts` (Area/Bar charts).
+*   **Agent Tracer (Sourcing)**: A Chat UI that interfaces with the backend `SearchCandidates` API. Allows natural language sourcing.
+*   **Agent Faye (Screening)**: An automated screener that buckets applicants into "High Signal" (>80% match), "Potential Fit", and "Low Signal".
+*   **Job Management**: Post, Close, and Reopen jobs.
+
+#### **Seeker Dashboard (`/dashboard/seeker`)**
+*   **Job Feed**: Displays jobs sorted by **Match Score**, Salary, or Date.
+*   **Match Badge**: A visual indicator (Green/Yellow/Gray) showing how well the user fits the role based on the backend algorithm.
+*   **Application Tracker**: Visual timeline of application status (Sent -> Delivered -> In Review).
+
+### Web3 Integration
+*   **Provider**: `Web3Provider.tsx` wraps the app with **Wagmi** and **RainbowKit**.
+*   **Auth**: The `AuthPage` allows connecting a wallet. The wallet address is sent to the backend during registration (`/users` endpoint) to bind the on-chain identity to the off-chain profile.
+
+---
+
+## 🔄 Workflows & System Design
+
+### 1. The AI Resume Onboarding Flow
+1.  **User Action**: Uploads PDF in `dashboard/seeker/onboarding`.
+2.  **Frontend**: Uses `UploadThing` to store file -> Gets URL.
+3.  **API Call**: POSTs URL to `/api/v1/parse-resume`.
+4.  **Backend**: Downloads PDF -> Extracts Text -> Llama 3.3 Inference -> Returns JSON.
+5.  **Frontend**: Auto-populates the React Hook Form with the extracted data.
+
+### 2. The "Faye" Screening Agent Flow
+1.  **Trigger**: Candidate applies to a job.
+2.  **Calculation**: Backend calculates `match_score` immediately upon application.
+3.  **Recruiter View**: Goes to `dashboard/recruiter/agents`.
+4.  **Agent Logic**: Fetches all applications. Filters and sorts them by `match_score`.
+5.  **Display**: Candidates are presented in tiered buckets (High/Medium/Low) for rapid review.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+*   Node.js 18+
+*   Go 1.25+
+*   PostgreSQL (with `pgvector` extension installed)
+*   Turbo CLI (`npm install -g turbo`)
+
+### Installation
+
+1.  **Clone the repo:**
+    ```bash
+    git clone <repo-url>
+    cd aswinbala005-rizeos-monorepo
+    ```
+
+2.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Database Setup:**
+    *   Ensure Postgres is running.
+    *   Run migrations located in `apps/api/migrations`.
+
+4.  **Run the Monorepo:**
+    ```bash
+    turbo dev
+    ```
+    *   Frontend: `http://localhost:3000`
+    *   Backend: `http://localhost:8080`
+
+---
+
+## 🔐 Environment Variables
+
+Create a `.env` file in `apps/api` and `apps/web`.
+
+### Backend (`apps/api/.env`)
+```env
+PORT=8080
+DATABASE_URL=postgres://user:password@localhost:5432/rizeos?sslmode=disable
+CEREBRAS_API_KEY=your_cerebras_ai_key
 ```
-cd my-turborepo
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+### Frontend (`apps/web/.env.local`)
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+INTERNAL_API_URL=http://127.0.0.1:8080 # For server-side proxying
+NEXT_PUBLIC_WALLET_CONNECT_ID=your_wallet_connect_id
+UPLOADTHING_SECRET=your_uploadthing_secret
+UPLOADTHING_APP_ID=your_uploadthing_app_id
 ```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
