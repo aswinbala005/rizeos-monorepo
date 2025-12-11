@@ -7,13 +7,22 @@ INSERT INTO users (
 RETURNING *;
 
 -- name: GetUserByWallet :one
-SELECT * FROM users WHERE wallet_address = $1 LIMIT 1;
+SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+       experience, projects, education, job_role, phone, organization_name, 
+       organization_location, organization_bio, professional_email, created_at, updated_at
+FROM users WHERE wallet_address = $1 LIMIT 1;
 
 -- name: GetUserByID :one
-SELECT * FROM users WHERE id = $1 LIMIT 1;
+SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+       experience, projects, education, job_role, phone, organization_name, 
+       organization_location, organization_bio, professional_email, created_at, updated_at
+FROM users WHERE id = $1 LIMIT 1;
 
 -- name: GetUserByEmail :one
-SELECT * FROM users WHERE email = $1 LIMIT 1;
+SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+       experience, projects, education, job_role, phone, organization_name, 
+       organization_location, organization_bio, professional_email, created_at, updated_at
+FROM users WHERE email = $1 LIMIT 1;
 
 -- name: UpdateSeekerProfile :one
 UPDATE users

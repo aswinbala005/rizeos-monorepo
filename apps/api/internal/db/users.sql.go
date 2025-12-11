@@ -64,100 +64,169 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, wallet_address, email, role, karma, is_pro, created_at, updated_at, full_name, password_hash, bio, skills, experience, projects, job_role, education, phone, organization_name, organization_location, organization_bio, professional_email FROM users WHERE email = $1 LIMIT 1
+SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+       experience, projects, education, job_role, phone, organization_name, 
+       organization_location, organization_bio, professional_email, created_at, updated_at
+FROM users WHERE email = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email pgtype.Text) (User, error) {
+type GetUserByEmailRow struct {
+	ID                   pgtype.UUID        `json:"id"`
+	WalletAddress        pgtype.Text        `json:"wallet_address"`
+	Email                pgtype.Text        `json:"email"`
+	Role                 UserRole           `json:"role"`
+	FullName             pgtype.Text        `json:"full_name"`
+	PasswordHash         pgtype.Text        `json:"password_hash"`
+	Bio                  pgtype.Text        `json:"bio"`
+	Skills               pgtype.Text        `json:"skills"`
+	Experience           pgtype.Text        `json:"experience"`
+	Projects             []byte             `json:"projects"`
+	Education            pgtype.Text        `json:"education"`
+	JobRole              pgtype.Text        `json:"job_role"`
+	Phone                pgtype.Text        `json:"phone"`
+	OrganizationName     pgtype.Text        `json:"organization_name"`
+	OrganizationLocation pgtype.Text        `json:"organization_location"`
+	OrganizationBio      pgtype.Text        `json:"organization_bio"`
+	ProfessionalEmail    pgtype.Text        `json:"professional_email"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email pgtype.Text) (GetUserByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i User
+	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.WalletAddress,
 		&i.Email,
 		&i.Role,
-		&i.Karma,
-		&i.IsPro,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.FullName,
 		&i.PasswordHash,
 		&i.Bio,
 		&i.Skills,
 		&i.Experience,
 		&i.Projects,
-		&i.JobRole,
 		&i.Education,
+		&i.JobRole,
 		&i.Phone,
 		&i.OrganizationName,
 		&i.OrganizationLocation,
 		&i.OrganizationBio,
 		&i.ProfessionalEmail,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, wallet_address, email, role, karma, is_pro, created_at, updated_at, full_name, password_hash, bio, skills, experience, projects, job_role, education, phone, organization_name, organization_location, organization_bio, professional_email FROM users WHERE id = $1 LIMIT 1
+SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+       experience, projects, education, job_role, phone, organization_name, 
+       organization_location, organization_bio, professional_email, created_at, updated_at
+FROM users WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error) {
+type GetUserByIDRow struct {
+	ID                   pgtype.UUID        `json:"id"`
+	WalletAddress        pgtype.Text        `json:"wallet_address"`
+	Email                pgtype.Text        `json:"email"`
+	Role                 UserRole           `json:"role"`
+	FullName             pgtype.Text        `json:"full_name"`
+	PasswordHash         pgtype.Text        `json:"password_hash"`
+	Bio                  pgtype.Text        `json:"bio"`
+	Skills               pgtype.Text        `json:"skills"`
+	Experience           pgtype.Text        `json:"experience"`
+	Projects             []byte             `json:"projects"`
+	Education            pgtype.Text        `json:"education"`
+	JobRole              pgtype.Text        `json:"job_role"`
+	Phone                pgtype.Text        `json:"phone"`
+	OrganizationName     pgtype.Text        `json:"organization_name"`
+	OrganizationLocation pgtype.Text        `json:"organization_location"`
+	OrganizationBio      pgtype.Text        `json:"organization_bio"`
+	ProfessionalEmail    pgtype.Text        `json:"professional_email"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (GetUserByIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
-	var i User
+	var i GetUserByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.WalletAddress,
 		&i.Email,
 		&i.Role,
-		&i.Karma,
-		&i.IsPro,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.FullName,
 		&i.PasswordHash,
 		&i.Bio,
 		&i.Skills,
 		&i.Experience,
 		&i.Projects,
-		&i.JobRole,
 		&i.Education,
+		&i.JobRole,
 		&i.Phone,
 		&i.OrganizationName,
 		&i.OrganizationLocation,
 		&i.OrganizationBio,
 		&i.ProfessionalEmail,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getUserByWallet = `-- name: GetUserByWallet :one
-SELECT id, wallet_address, email, role, karma, is_pro, created_at, updated_at, full_name, password_hash, bio, skills, experience, projects, job_role, education, phone, organization_name, organization_location, organization_bio, professional_email FROM users WHERE wallet_address = $1 LIMIT 1
+SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+       experience, projects, education, job_role, phone, organization_name, 
+       organization_location, organization_bio, professional_email, created_at, updated_at
+FROM users WHERE wallet_address = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByWallet(ctx context.Context, walletAddress pgtype.Text) (User, error) {
+type GetUserByWalletRow struct {
+	ID                   pgtype.UUID        `json:"id"`
+	WalletAddress        pgtype.Text        `json:"wallet_address"`
+	Email                pgtype.Text        `json:"email"`
+	Role                 UserRole           `json:"role"`
+	FullName             pgtype.Text        `json:"full_name"`
+	PasswordHash         pgtype.Text        `json:"password_hash"`
+	Bio                  pgtype.Text        `json:"bio"`
+	Skills               pgtype.Text        `json:"skills"`
+	Experience           pgtype.Text        `json:"experience"`
+	Projects             []byte             `json:"projects"`
+	Education            pgtype.Text        `json:"education"`
+	JobRole              pgtype.Text        `json:"job_role"`
+	Phone                pgtype.Text        `json:"phone"`
+	OrganizationName     pgtype.Text        `json:"organization_name"`
+	OrganizationLocation pgtype.Text        `json:"organization_location"`
+	OrganizationBio      pgtype.Text        `json:"organization_bio"`
+	ProfessionalEmail    pgtype.Text        `json:"professional_email"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetUserByWallet(ctx context.Context, walletAddress pgtype.Text) (GetUserByWalletRow, error) {
 	row := q.db.QueryRow(ctx, getUserByWallet, walletAddress)
-	var i User
+	var i GetUserByWalletRow
 	err := row.Scan(
 		&i.ID,
 		&i.WalletAddress,
 		&i.Email,
 		&i.Role,
-		&i.Karma,
-		&i.IsPro,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.FullName,
 		&i.PasswordHash,
 		&i.Bio,
 		&i.Skills,
 		&i.Experience,
 		&i.Projects,
-		&i.JobRole,
 		&i.Education,
+		&i.JobRole,
 		&i.Phone,
 		&i.OrganizationName,
 		&i.OrganizationLocation,
 		&i.OrganizationBio,
 		&i.ProfessionalEmail,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
