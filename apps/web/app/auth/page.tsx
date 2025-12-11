@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -30,7 +30,7 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export default function AuthPage() {
+function AuthPageContent() {
   const { address, isConnected } = useAccount();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -234,5 +234,20 @@ export default function AuthPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AuthPageContent />
+    </Suspense>
   );
 }
