@@ -66,15 +66,17 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	var err error
 
 	if len(identifier) == 42 && identifier[0] == '0' && identifier[1] == 'x' {
-		walletUser, err := h.queries.GetUserByWallet(c.Context(), pgtype.Text{String: identifier, Valid: true})
-		if err == nil {
+		walletUser, walletErr := h.queries.GetUserByWallet(c.Context(), pgtype.Text{String: identifier, Valid: true})
+		if walletErr == nil {
 			return c.JSON(fiber.Map{"exists": true, "user": walletUser})
 		}
+		err = walletErr
 	} else {
-		emailUser, err := h.queries.GetUserByEmail(c.Context(), pgtype.Text{String: identifier, Valid: true})
-		if err == nil {
+		emailUser, emailErr := h.queries.GetUserByEmail(c.Context(), pgtype.Text{String: identifier, Valid: true})
+		if emailErr == nil {
 			return c.JSON(fiber.Map{"exists": true, "user": emailUser})
 		}
+		err = emailErr
 	}
 
 	if err != nil {
@@ -86,7 +88,7 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	
 	// Should not reach here, but return not found as fallback
 	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"exists": false})
-
+}
 }
 
 // --- CREATE USER ---
