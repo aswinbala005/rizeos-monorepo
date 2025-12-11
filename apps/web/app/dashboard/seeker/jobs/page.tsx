@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { MapPin, Search, Sparkles, GraduationCap, Briefcase, X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPin, Search, GraduationCap, Briefcase, X, Loader2, Target, Code2, IndianRupee } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useJobs } from "@/hooks/useJobs"; 
 import { useAccount } from "wagmi";
+import { MatchBadge } from "@/components/ui/match-badge";
 
 export default function JobFeed() {
   const [selectedJob, setSelectedJob] = useState<any>(null); 
@@ -21,6 +22,7 @@ export default function JobFeed() {
 
   const { data: jobs, isLoading, error } = useJobs();
 
+  // --- SORTING LOGIC IS HERE ---
   const filteredJobs = useMemo(() => {
     if (!jobs) return [];
 
@@ -30,9 +32,15 @@ export default function JobFeed() {
       job.stack.some((s: string) => s.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    if (sortBy === "match") result.sort((a: any, b: any) => b.match - a.match);
-    if (sortBy === "salary") result.sort((a: any, b: any) => b.salary - a.salary);
-    if (sortBy === "date") result.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // This is where the sorting happens
+    if (sortBy === "match") {
+      result.sort((a: any, b: any) => b.match - a.match);
+    } else if (sortBy === "salary") {
+      // Sorts from highest salary to lowest
+      result.sort((a: any, b: any) => b.salary - a.salary); 
+    } else if (sortBy === "date") {
+      result.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
 
     return result;
   }, [jobs, searchQuery, sortBy]);
@@ -42,16 +50,13 @@ export default function JobFeed() {
         alert("Please connect wallet first");
         return;
     }
-
     try {
         const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${address}`);
         const userData = await userRes.json();
-        
         if (!userData.exists) {
             alert("User account not found. Please register.");
             return;
         }
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -62,7 +67,6 @@ export default function JobFeed() {
                 gateway_answer: "Auto-applied via Feed" 
             })
         });
-
         if (response.ok) {
             router.push("/dashboard/seeker/applications");
         } else {
@@ -95,6 +99,7 @@ export default function JobFeed() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500 whitespace-nowrap">Sort by:</span>
+            {/* --- THE UI FOR SORTING IS HERE --- */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-[140px] h-10 text-xs">
                 <SelectValue placeholder="Sort by" />
@@ -133,12 +138,9 @@ export default function JobFeed() {
                             <p className="text-gray-500 text-sm">{job.company}</p>
                         </div>
                     </div>
-                    <Badge className={`${job.match > 90 ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"} border-0`}>
-                        {job.match}% Match
-                    </Badge>
+                    <MatchBadge score={job.match} />
                 </div>
                 
-                {/* Stats - UPDATED: Removed Icon, just text */}
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
                     <div className="font-medium text-gray-700">{job.salaryDisplay}</div>
                     <div className="flex items-center gap-1"><MapPin className="w-4 h-4 text-gray-400" /> {job.location}</div>
@@ -153,7 +155,7 @@ export default function JobFeed() {
                 <div className="pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-2">
                         <p className="text-gray-600 text-sm truncate flex-1">
-                            {job.description.split('\n')[0]}...
+                            {job.mission}
                         </p>
                         <button className="text-indigo-600 text-sm font-bold hover:underline whitespace-nowrap">
                             Read More
@@ -169,7 +171,6 @@ export default function JobFeed() {
       <Dialog open={!!selectedJob} onOpenChange={() => setSelectedJob(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] p-0 overflow-hidden flex flex-col">
             
-            {/* Header */}
             <DialogHeader className="p-6 border-b border-gray-100 bg-white shrink-0">
                 <DialogTitle className="text-2xl font-bold">{selectedJob?.role}</DialogTitle>
                 <DialogDescription className="text-lg text-gray-600 mt-1">
@@ -177,46 +178,40 @@ export default function JobFeed() {
                 </DialogDescription>
             </DialogHeader>
 
-            {/* Scrollable Body */}
             <div className="flex-1 overflow-y-auto p-6 bg-white">
                 <div className="space-y-8">
                     
-                    {/* AI Summary Box */}
                     <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-5">
                         <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm mb-3">
-                        <Sparkles className="w-4 h-4" /> AI Summary
+                            <Target className="w-4 h-4" /> Job Description
                         </div>
-                        <div className="grid gap-3 text-sm">
-                        <div className="flex gap-3"><span className="text-lg">💰</span><span className="text-gray-700"><strong className="text-gray-900">Pay:</strong> {selectedJob?.summary.pay}</span></div>
-                        <div className="flex gap-3"><span className="text-lg">🛠️</span><span className="text-gray-700"><strong className="text-gray-900">Tech:</strong> {selectedJob?.summary.tech}</span></div>
-                        <div className="flex gap-3"><span className="text-lg">🎯</span><span className="text-gray-700"><strong className="text-gray-900">Mission:</strong> {selectedJob?.summary.mission}</span></div>
-                        </div>
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                            {selectedJob?.mission}
+                        </p>
                     </div>
 
-                    {/* Description */}
                     <div>
-                        <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Job Description</h3>
+                        <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide flex items-center gap-2">
+                            <Briefcase className="w-4 h-4" /> Key Responsibilities
+                        </h3>
                         <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
                             {selectedJob?.description}
                         </div>
                     </div>
 
-                    {/* Education */}
                     <div>
                         <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide flex items-center gap-2">
                             <GraduationCap className="w-4 h-4" /> Education
                         </h3>
-                        <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-2 border border-gray-100">
-                            <p><span className="text-gray-500">UG:</span> <span className="font-medium text-gray-900">{selectedJob?.education.ug}</span></p>
-                            <p><span className="text-gray-500">PG:</span> <span className="font-medium text-gray-900">{selectedJob?.education.pg}</span></p>
-                            <p><span className="text-gray-500">Doctorate:</span> <span className="font-medium text-gray-900">{selectedJob?.education.doc}</span></p>
+                        <div className="bg-gray-50 rounded-lg p-4 text-sm border border-gray-100 text-gray-700">
+                            {selectedJob?.education}
                         </div>
                     </div>
 
-                    {/* Key Skills */}
                     <div>
-                        <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Key Skills</h3>
-                        <p className="text-xs text-gray-500 mb-3">Skills highlighted are preferred.</p>
+                        <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide flex items-center gap-2">
+                            <Code2 className="w-4 h-4" /> Skills
+                        </h3>
                         <div className="flex flex-wrap gap-2">
                             {selectedJob?.keySkills.map((skill: string) => (
                                 <span key={skill} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm rounded-full font-medium shadow-sm hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-default">
@@ -228,7 +223,6 @@ export default function JobFeed() {
                 </div>
             </div>
 
-            {/* Footer */}
             <div className="p-6 border-t border-gray-100 bg-white shrink-0">
                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-12 text-lg" onClick={() => { handleApply(selectedJob); setSelectedJob(null); }}>
                     Apply for this Job

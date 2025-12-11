@@ -9,10 +9,40 @@ import { useAccount } from "wagmi";
 import { Loader2, Pencil, Save, X, User, Mail, Briefcase, Code2, FileText, GraduationCap, Plus, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query"; // <-- Import for Cache Invalidation
+
+// Helper to safely parse projects data from DB (handles String, Array, or Base64)
+const parseProjects = (data: any) => {
+  if (!data) return [];
+  
+  // Case 1: Already an array
+  if (Array.isArray(data)) return data;
+
+  // Case 2: Stringified JSON
+  if (typeof data === 'string') {
+    try {
+      // Check for Base64 (common with some DB drivers)
+      if (!data.trim().startsWith('[') && !data.trim().startsWith('{')) {
+         try { return JSON.parse(atob(data)); } catch (e) {}
+      }
+
+      const parsed = JSON.parse(data);
+      if (typeof parsed === 'string') return JSON.parse(parsed); // Double stringified
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.warn("⚠️ Failed to parse projects JSON:", e);
+      return [];
+    }
+  }
+  
+  return [];
+};
 
 export default function ProfilePage() {
   const { address } = useAccount();
   const router = useRouter();
+  const queryClient = useQueryClient(); // <-- Initialize Query Client
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
@@ -24,52 +54,57 @@ export default function ProfilePage() {
     name: "projects",
   });
 
+  // 1. Fetch User Data (Robust Lookup)
   useEffect(() => {
-    if (!address) return;
+    // Try Email first, then Wallet
+    const storedEmail = localStorage.getItem("user_email");
+    const lookupKey = storedEmail || address;
+
+    if (!lookupKey) return;
+
     async function fetchUser() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${address}`);
+        console.log(`🚀 Fetching profile for: ${lookupKey}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${lookupKey}`);
         const data = await res.json();
+        
         if (data.exists) {
+          console.log("✅ DB Data Received:", data.user);
+
+          // Parse projects
+          const safeProjects = parseProjects(data.user.projects);
           
-          // --- THE FIX IS HERE ---
-          // 1. Parse projects from JSON string to Array
-          let projectsData = data.user.projects;
-          if (typeof projectsData === 'string') {
-            try {
-              projectsData = JSON.parse(projectsData);
-            } catch (e) {
-              projectsData = [];
-            }
-          }
-          
-          // 2. Update the user object with the parsed array
           const userWithParsedProjects = {
             ...data.user,
-            projects: Array.isArray(projectsData) ? projectsData : []
+            projects: safeProjects
           };
 
-          // 3. Set State for View Mode
           setUserData(userWithParsedProjects);
           
-          // 4. Set Form Data for Edit Mode
+          // Pre-fill form (Force empty strings if null)
           reset({
-            fullName: data.user.full_name,
-            email: data.user.email,
+            fullName: data.user.full_name || "",
+            email: data.user.email || "",
             jobRole: data.user.job_role || "",
             bio: data.user.bio || "",
             skills: data.user.skills || "",
             experience: data.user.experience || "",
-            projects: userWithParsedProjects.projects, // Use the parsed array
-            education: data.user.education || ""
+            education: data.user.education || "",
+            projects: safeProjects, 
           });
+        } else {
+            console.error("❌ User not found in DB");
         }
-      } catch (error) { console.error("Failed to fetch profile", error); } 
-      finally { setIsLoading(false); }
+      } catch (error) { 
+          console.error("❌ Failed to fetch profile", error); 
+      } finally { 
+          setIsLoading(false); 
+      }
     }
     fetchUser();
-  }, [address, reset]);
+  }, [address, reset, router]);
 
+  // 2. Handle Update
   const onSubmit = async (data: any) => {
     if (!userData?.id) return;
     try {
@@ -78,23 +113,32 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+
       if (res.ok) {
         const updatedUser = await res.json();
         
-        // Parse projects again for the UI update
-        let projectsData = updatedUser.projects;
-        if (typeof projectsData === 'string') {
-            try { projectsData = JSON.parse(projectsData); } catch (e) { projectsData = []; }
-        }
-        
-        const finalUser = { ...updatedUser, projects: projectsData };
+        // Parse projects again for UI
+        const safeProjects = parseProjects(updatedUser.projects);
+        const finalUser = { ...updatedUser, projects: safeProjects };
         
         setUserData(finalUser);
-        localStorage.setItem("user_profile", JSON.stringify({ fullName: finalUser.full_name, jobRole: finalUser.job_role }));
+        
+        // Update Navbar Cache
+        localStorage.setItem("user_profile", JSON.stringify({ 
+            fullName: finalUser.full_name, 
+            jobRole: finalUser.job_role 
+        }));
+        
+        // CRITICAL: Invalidate Jobs Cache so Match Scores update immediately
+        queryClient.invalidateQueries({ queryKey: ["jobs"] });
+
         setIsEditing(false);
         router.refresh();
         alert("Profile Updated Successfully!");
-      } else { alert("Failed to update profile."); }
+      } else { 
+        const err = await res.json();
+        alert("Failed to update: " + err.error); 
+      }
     } catch (error) { console.error(error); }
   };
 
@@ -102,6 +146,8 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
+      
+      {/* Header Section */}
       <div className="flex items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20 border-4 border-indigo-50">
@@ -109,32 +155,38 @@ export default function ProfilePage() {
                 <AvatarFallback>U</AvatarFallback>
             </Avatar>
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">{userData?.full_name}</h1>
-                <p className="text-indigo-600 font-medium">{userData?.job_role}</p>
+                <h1 className="text-2xl font-bold text-gray-900">{userData?.full_name || "User"}</h1>
+                <p className="text-indigo-600 font-medium">{userData?.job_role || "No Role Set"}</p>
                 <div className="flex items-center gap-2 text-gray-500 mt-1 text-sm"><Mail className="w-4 h-4" /><span>{userData?.email}</span></div>
             </div>
         </div>
         {!isEditing && <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50"><Pencil className="w-4 h-4" /> Edit Profile</Button>}
       </div>
+
+      {/* Content Section */}
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+        
+        {/* --- VIEW MODE --- */}
         {!isEditing ? (
             <div className="space-y-8">
                 <div><h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2"><User className="w-4 h-4" /> About Me</h3><p className="text-gray-700 leading-relaxed whitespace-pre-line">{userData?.bio || "No bio added yet."}</p></div>
+                
                 <div className="grid md:grid-cols-2 gap-8">
                     <div><h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2"><Code2 className="w-4 h-4" /> Skills</h3><div className="flex flex-wrap gap-2">{userData?.skills ? userData.skills.split(',').map((skill: string) => (<span key={skill} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium">{skill.trim()}</span>)) : <span className="text-gray-400 italic">No skills listed</span>}</div></div>
                     <div><h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2"><Briefcase className="w-4 h-4" /> Experience</h3><p className="text-gray-700 font-medium">{userData?.experience || "Not specified"}</p></div>
                 </div>
+                
                 <div><h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2"><GraduationCap className="w-4 h-4" /> Education</h3><p className="text-gray-700 font-medium">{userData?.education || "Not specified"}</p></div>
                 
                 {/* VIEW MODE: PROJECTS */}
                 <div>
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2"><FileText className="w-4 h-4" /> Projects</h3>
                     <div className="space-y-4">
-                        {userData?.projects && Array.isArray(userData.projects) && userData.projects.length > 0 ? (
+                        {userData?.projects && userData.projects.length > 0 ? (
                             userData.projects.map((project: any, index: number) => (
-                                <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                    <h4 className="font-bold text-gray-900">{project.title}</h4>
-                                    <p className="text-gray-600 text-sm mt-1 whitespace-pre-line">{project.summary}</p>
+                                <div key={index} className="bg-gray-50 p-5 rounded-xl border border-gray-200 hover:border-indigo-200 transition-colors">
+                                    <h4 className="font-bold text-gray-900 text-lg mb-2">{project.title}</h4>
+                                    <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{project.summary}</p>
                                 </div>
                             ))
                         ) : (

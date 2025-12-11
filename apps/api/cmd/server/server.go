@@ -15,8 +15,6 @@ import (
 	"github.com/aswinbala005/rizeos/api/internal/config"
 	"github.com/aswinbala005/rizeos/api/internal/db"
 	"github.com/aswinbala005/rizeos/api/internal/handlers"
-
-	
 )
 
 // Server holds all dependencies for our application
@@ -65,9 +63,9 @@ func (s *Server) setupMiddleware() {
 	s.router.Use(recover.New())
 	s.router.Use(logger.New())
 	
-	// FIX: Allow all origins, headers, and methods for development
+	// Explicit CORS Config
 	s.router.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
+		AllowOrigins: "*", // Allow all for dev
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
@@ -87,16 +85,25 @@ func (s *Server) setupRoutes() {
 	userHandler := handlers.NewUserHandler(s.queries)
 	jobHandler := handlers.NewJobHandler(s.queries)
 	appHandler := handlers.NewApplicationHandler(s.queries)
-	resumeHandler := handlers.NewResumeHandler() // <-- New Resume Handler
+	resumeHandler := handlers.NewResumeHandler()
 
 	// --- User Routes ---
 	api.Post("/users", userHandler.CreateUser)
-	api.Get("/users/:wallet", userHandler.GetUser)
+	api.Post("/login", userHandler.Login)
+	api.Get("/users/:email", userHandler.GetUser) // Accepts Email OR Wallet
 	api.Put("/users/:id", userHandler.UpdateUser)
+	api.Get("/candidates/search", userHandler.SearchCandidates) // <-- NEW: Archer
 
 	// --- Job Routes ---
 	api.Post("/jobs", jobHandler.CreateJob)
 	api.Get("/jobs", jobHandler.ListJobs)
+	api.Get("/jobs/recruiter/:id", jobHandler.ListJobsByRecruiter) // <-- NEW ROUTE
+	api.Get("/jobs/:id/applications", appHandler.GetJobApplications)
+	api.Get("/jobs/recruiter/:id/volume", appHandler.GetApplicationVolume) // <-- NEW ROUTE: Real-time Chart Data
+	api.Get("/applications/recruiter/:id", appHandler.GetRecruiterApplications) // <-- NEW: Thena
+	api.Put("/jobs/:id/close", jobHandler.CloseJob)
+	api.Put("/jobs/:id/reopen", jobHandler.ReopenJob)
+	api.Get("/jobs/recruiter/:id/stats", jobHandler.GetDashboardStats) // <-- NEW ROUTE
 
 	// --- Application Routes ---
 	api.Post("/applications", appHandler.ApplyToJob)
@@ -104,7 +111,7 @@ func (s *Server) setupRoutes() {
 	api.Delete("/applications/:id", appHandler.WithdrawApplication)
 
 	// --- AI Routes ---
-	api.Post("/parse-resume", resumeHandler.ParseResume) // <-- New Route
+	api.Post("/parse-resume", resumeHandler.ParseResume)
 }
 
 // Start runs the HTTP server with graceful shutdown
@@ -121,7 +128,7 @@ func (s *Server) Start() {
 		}
 	}()
 
-	// Wait for a signal (Ctrl+C)
+	// Wait for a signal
 	<-quit
 	log.Println("Shutting down server...")
 

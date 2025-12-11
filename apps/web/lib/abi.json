@@ -1,0 +1,15 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "jobId",
+        "type": "string"
+      }
+    ],
+    "name": "payForJob",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  }
+]
