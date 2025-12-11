@@ -17,7 +17,7 @@ INSERT INTO applications (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, job_id, candidate_id, status, match_score, gateway_answer, gateway_grade, created_at, updated_at
+RETURNING id, job_id, candidate_id, status, match_score, gateway_answer, created_at, updated_at
 `
 
 type CreateApplicationParams struct {
@@ -44,7 +44,6 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.Status,
 		&i.MatchScore,
 		&i.GatewayAnswer,
-		&i.GatewayGrade,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

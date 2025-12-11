@@ -22,15 +22,15 @@ func (q *Queries) CloseJob(ctx context.Context, id pgtype.UUID) error {
 
 const createJob = `-- name: CreateJob :one
 INSERT INTO jobs (
-  recruiter_id, title, description, requirements, gateway_question, is_paid,
+  recruiter_id, title, description, requirements, is_paid,
   job_type, location_type, location_city, salary_min, salary_max, currency,
   experience_min, experience_max, benefits,
-  job_summary, education_requirements, skills_requirements, languages, work_conditions, is_unpaid,
-  recruiter_email -- <-- NEW
+  job_summary, education_requirements, skills_requirements, is_unpaid,
+  recruiter_email
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22 -- <-- NEW
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
 )
-RETURNING id, recruiter_id, title, description, gateway_question, is_paid, created_at, updated_at
+RETURNING id, recruiter_id, title, description, is_paid, created_at, updated_at
 `
 
 type CreateJobParams struct {
@@ -38,7 +38,6 @@ type CreateJobParams struct {
 	Title                 string      `json:"title"`
 	Description           string      `json:"description"`
 	Requirements          pgtype.Text `json:"requirements"`
-	GatewayQuestion       pgtype.Text `json:"gateway_question"`
 	IsPaid                pgtype.Bool `json:"is_paid"`
 	JobType               pgtype.Text `json:"job_type"`
 	LocationType          pgtype.Text `json:"location_type"`
@@ -52,21 +51,18 @@ type CreateJobParams struct {
 	JobSummary            pgtype.Text `json:"job_summary"`
 	EducationRequirements pgtype.Text `json:"education_requirements"`
 	SkillsRequirements    pgtype.Text `json:"skills_requirements"`
-	Languages             pgtype.Text `json:"languages"`
-	WorkConditions        pgtype.Text `json:"work_conditions"`
 	IsUnpaid              pgtype.Bool `json:"is_unpaid"`
 	RecruiterEmail        pgtype.Text `json:"recruiter_email"`
 }
 
 type CreateJobRow struct {
-	ID              pgtype.UUID        `json:"id"`
-	RecruiterID     pgtype.UUID        `json:"recruiter_id"`
-	Title           string             `json:"title"`
-	Description     string             `json:"description"`
-	GatewayQuestion pgtype.Text        `json:"gateway_question"`
-	IsPaid          pgtype.Bool        `json:"is_paid"`
-	CreatedAt       pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	ID          pgtype.UUID        `json:"id"`
+	RecruiterID pgtype.UUID        `json:"recruiter_id"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	IsPaid      pgtype.Bool        `json:"is_paid"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (CreateJobRow, error) {
@@ -75,7 +71,6 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (CreateJob
 		arg.Title,
 		arg.Description,
 		arg.Requirements,
-		arg.GatewayQuestion,
 		arg.IsPaid,
 		arg.JobType,
 		arg.LocationType,
@@ -89,8 +84,6 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (CreateJob
 		arg.JobSummary,
 		arg.EducationRequirements,
 		arg.SkillsRequirements,
-		arg.Languages,
-		arg.WorkConditions,
 		arg.IsUnpaid,
 		arg.RecruiterEmail,
 	)
@@ -100,7 +93,6 @@ func (q *Queries) CreateJob(ctx context.Context, arg CreateJobParams) (CreateJob
 		&i.RecruiterID,
 		&i.Title,
 		&i.Description,
-		&i.GatewayQuestion,
 		&i.IsPaid,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -154,7 +146,7 @@ func (q *Queries) GetJobApplicationCounts(ctx context.Context, recruiterID pgtyp
 }
 
 const getJobByID = `-- name: GetJobByID :one
-SELECT id, recruiter_id, title, description, embedding, gateway_question, is_paid, created_at, updated_at, job_type, location_type, location_city, salary_min, salary_max, currency, experience_min, experience_max, benefits, requirements, job_summary, education_requirements, skills_requirements, languages, work_conditions, is_unpaid, recruiter_email, status FROM jobs WHERE id = $1 LIMIT 1
+SELECT id, recruiter_id, title, description, is_paid, created_at, updated_at, job_type, location_type, location_city, salary_min, salary_max, currency, experience_min, experience_max, benefits, requirements, job_summary, education_requirements, skills_requirements, is_unpaid, recruiter_email, status FROM jobs WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
@@ -165,8 +157,6 @@ func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
 		&i.RecruiterID,
 		&i.Title,
 		&i.Description,
-		&i.Embedding,
-		&i.GatewayQuestion,
 		&i.IsPaid,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -183,8 +173,6 @@ func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
 		&i.JobSummary,
 		&i.EducationRequirements,
 		&i.SkillsRequirements,
-		&i.Languages,
-		&i.WorkConditions,
 		&i.IsUnpaid,
 		&i.RecruiterEmail,
 		&i.Status,
@@ -194,13 +182,13 @@ func (q *Queries) GetJobByID(ctx context.Context, id pgtype.UUID) (Job, error) {
 
 const listJobs = `-- name: ListJobs :many
 SELECT 
-  j.id, j.recruiter_id, j.title, j.description, j.gateway_question, j.is_paid, j.created_at, j.updated_at,
+  j.id, j.recruiter_id, j.title, j.description, j.is_paid, j.created_at, j.updated_at,
   j.job_type, j.location_type, j.location_city, j.salary_min, j.salary_max, j.currency,
   j.job_summary, j.education_requirements, j.skills_requirements, j.is_unpaid,
-  u.organization_name -- <--- Fetching this from the users table
+  u.organization_name
 FROM jobs j
-JOIN users u ON j.recruiter_id = u.id -- <--- Joining tables
-WHERE status = 'OPEN' -- <-- NEW FILTER
+JOIN users u ON j.recruiter_id = u.id
+WHERE status = 'OPEN'
 ORDER BY j.created_at DESC
 `
 
@@ -209,7 +197,6 @@ type ListJobsRow struct {
 	RecruiterID           pgtype.UUID        `json:"recruiter_id"`
 	Title                 string             `json:"title"`
 	Description           string             `json:"description"`
-	GatewayQuestion       pgtype.Text        `json:"gateway_question"`
 	IsPaid                pgtype.Bool        `json:"is_paid"`
 	CreatedAt             pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt             pgtype.Timestamptz `json:"updated_at"`
@@ -240,7 +227,6 @@ func (q *Queries) ListJobs(ctx context.Context) ([]ListJobsRow, error) {
 			&i.RecruiterID,
 			&i.Title,
 			&i.Description,
-			&i.GatewayQuestion,
 			&i.IsPaid,
 			&i.CreatedAt,
 			&i.UpdatedAt,

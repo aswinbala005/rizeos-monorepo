@@ -4,7 +4,7 @@ INSERT INTO applications (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING *;
+RETURNING id, job_id, candidate_id, status, match_score, gateway_answer, created_at, updated_at;
 
 -- name: GetApplicationsByCandidate :many
 SELECT 

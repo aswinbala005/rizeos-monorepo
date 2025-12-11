@@ -35,7 +35,6 @@ type CreateJobRequest struct {
 	Description     string `json:"description" validate:"required"`
 	Education       string `json:"education_requirements"`
 	Skills          string `json:"skills_requirements"`
-	Languages       string `json:"languages"`
 	ExperienceMin   int32  `json:"experience_min"`
 	ExperienceMax   int32  `json:"experience_max"`
 	IsUnpaid        bool   `json:"is_unpaid"`
@@ -46,8 +45,6 @@ type CreateJobRequest struct {
 	JobType         string `json:"job_type"`
 	LocationType    string `json:"location_type"`
 	LocationCity    string `json:"location_city"`
-	WorkConditions  string `json:"work_conditions"`
-	GatewayQuestion string `json:"gateway_question"`
 }
 
 func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
@@ -67,13 +64,10 @@ func (h *JobHandler) CreateJob(c *fiber.Ctx) error {
 		RecruiterEmail:        pgtype.Text{String: req.RecruiterEmail, Valid: true},
 		Title:                 req.Title,
 		Description:           req.Description,
-		GatewayQuestion:       pgtype.Text{String: req.GatewayQuestion, Valid: true},
 		IsPaid:                pgtype.Bool{Bool: false, Valid: true},
 		JobSummary:            pgtype.Text{String: req.JobSummary, Valid: true},
 		EducationRequirements: pgtype.Text{String: req.Education, Valid: true},
 		SkillsRequirements:    pgtype.Text{String: req.Skills, Valid: true},
-		Languages:             pgtype.Text{String: req.Languages, Valid: true},
-		WorkConditions:        pgtype.Text{String: req.WorkConditions, Valid: true},
 		IsUnpaid:              pgtype.Bool{Bool: req.IsUnpaid, Valid: true},
 		JobType:               pgtype.Text{String: req.JobType, Valid: true},
 		LocationType:          pgtype.Text{String: req.LocationType, Valid: true},

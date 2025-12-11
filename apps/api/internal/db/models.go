@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/pgvector/pgvector-go"
 )
 
 type UserRole string
@@ -61,7 +60,6 @@ type Application struct {
 	Status        string             `json:"status"`
 	MatchScore    pgtype.Int4        `json:"match_score"`
 	GatewayAnswer pgtype.Text        `json:"gateway_answer"`
-	GatewayGrade  pgtype.Text        `json:"gateway_grade"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
@@ -71,8 +69,6 @@ type Job struct {
 	RecruiterID           pgtype.UUID        `json:"recruiter_id"`
 	Title                 string             `json:"title"`
 	Description           string             `json:"description"`
-	Embedding             pgvector.Vector    `json:"embedding"`
-	GatewayQuestion       pgtype.Text        `json:"gateway_question"`
 	IsPaid                pgtype.Bool        `json:"is_paid"`
 	CreatedAt             pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt             pgtype.Timestamptz `json:"updated_at"`
@@ -89,8 +85,6 @@ type Job struct {
 	JobSummary            pgtype.Text        `json:"job_summary"`
 	EducationRequirements pgtype.Text        `json:"education_requirements"`
 	SkillsRequirements    pgtype.Text        `json:"skills_requirements"`
-	Languages             pgtype.Text        `json:"languages"`
-	WorkConditions        pgtype.Text        `json:"work_conditions"`
 	IsUnpaid              pgtype.Bool        `json:"is_unpaid"`
 	RecruiterEmail        pgtype.Text        `json:"recruiter_email"`
 	Status                pgtype.Text        `json:"status"`
