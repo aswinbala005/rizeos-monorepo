@@ -62,7 +62,13 @@ func (h *ApplicationHandler) ApplyToJob(c *fiber.Ctx) error {
 
     // 3. Calculate Match Score
     // Simple algorithm: Intersection of Job Requirements and Candidate Skills
-    matchScore := calculateMatchScore(job.Requirements.String, candidate.Skills.String)
+    // Add defensive check for empty strings
+    var matchScore int
+    if job.Requirements.Valid && candidate.Skills.Valid {
+        matchScore = calculateMatchScore(job.Requirements.String, candidate.Skills.String)
+    } else {
+        matchScore = 50 // Default score if data is missing
+    }
     // -------------------------------
 
 	arg := db.CreateApplicationParams{
