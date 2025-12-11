@@ -87,8 +87,7 @@ export default function PostJob() {
                 is_unpaid: data.isUnpaid,
                 salary_min: parseInt(data.salaryMin) || 0,
                 salary_max: parseInt(data.salaryMax) || 0,
-                currency: data.currency || "INR",
-                gateway_question: "" 
+                currency: data.currency || "INR"
             })
         });
 
