@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"strings"
-
 	"github.com/aswinbala005/rizeos/api/internal/db"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -47,22 +45,8 @@ func (h *ApplicationHandler) ApplyToJob(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid Candidate ID"})
 	}
 
-    // --- AUTOMATED SCREENING LOGIC ---
-    // 1. Fetch Job Details to get Requirements
-    job, err := h.queries.GetJobByID(c.Context(), jobUUID)
-    if err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch job details"})
-    }
-
-    // 2. Fetch Candidate Details to get Skills
-    candidate, err := h.queries.GetUserByID(c.Context(), candidateUUID)
-    if err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch candidate details"})
-    }
-
-    // 3. Set default match score (Requirements field removed)
-    var matchScore int = 50 // Default score
-    // -------------------------------
+    // Set default match score (Requirements and match calculation removed)
+    matchScore := int32(50)
 
 	arg := db.CreateApplicationParams{
 		JobID:         jobUUID,
@@ -78,54 +62,6 @@ func (h *ApplicationHandler) ApplyToJob(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(app)
-}
-
-// Helper function to calculate match score
-func calculateMatchScore(requirements string, skills string) int {
-    if requirements == "" || skills == "" {
-        return 0
-    }
-    
-    // Normalize and split
-    reqs := normalizeList(requirements)
-    candSkills := normalizeList(skills)
-
-    if len(reqs) == 0 {
-        return 100 // No requirements = 100% match? Or 0? Assuming 100 for now.
-    }
-
-    matches := 0
-    for _, r := range reqs {
-        for _, s := range candSkills {
-            if r == s || contains(s, r) || contains(r, s) { // exact or partial match
-                matches++
-                break
-            }
-        }
-    }
-
-    score := (float64(matches) / float64(len(reqs))) * 100
-    if score > 100 {
-        score = 100
-    }
-    return int(score)
-}
-
-func normalizeList(s string) []string {
-    var list []string
-    // Split by comma
-    parts := strings.Split(s, ",")
-    for _, p := range parts {
-        trimmed := strings.TrimSpace(strings.ToLower(p))
-        if trimmed != "" {
-            list = append(list, trimmed)
-        }
-    }
-    return list
-}
-
-func contains(s, substr string) bool {
-    return strings.Contains(s, substr)
 }
 
 // GetMyApplications fetches applications for a specific user
