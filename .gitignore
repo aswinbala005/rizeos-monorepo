@@ -5,12 +5,12 @@ node_modules
 .pnp
 .pnp.js
 
-# Local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Local env files (COMMENTED OUT - env files are now tracked)
+# .env
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
 
 # Testing
 coverage
@@ -37,5 +37,5 @@ yarn-error.log*
 .DS_Store
 *.pem
 
-# Environment variables
-.env
+# Environment variables (COMMENTED OUT - env files are now tracked)
+# .env
