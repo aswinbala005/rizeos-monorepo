@@ -109,7 +109,7 @@ func parseTokens(s string) []string {
 	return result
 }
 
-func calculateSmartScore(user db.User, job db.ListJobsRow) int {
+func calculateSmartScore(user db.GetUserByIDRow, job db.ListJobsRow) int {
 	score := 0.0
 	
 	uRole := strings.ToLower(user.JobRole.String)

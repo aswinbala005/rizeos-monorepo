@@ -63,13 +63,18 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Identifier required"})
 	}
 
-	var user db.User
 	var err error
 
 	if len(identifier) == 42 && identifier[0] == '0' && identifier[1] == 'x' {
-		user, err = h.queries.GetUserByWallet(c.Context(), pgtype.Text{String: identifier, Valid: true})
+		walletUser, err := h.queries.GetUserByWallet(c.Context(), pgtype.Text{String: identifier, Valid: true})
+		if err == nil {
+			return c.JSON(fiber.Map{"exists": true, "user": walletUser})
+		}
 	} else {
-		user, err = h.queries.GetUserByEmail(c.Context(), pgtype.Text{String: identifier, Valid: true})
+		emailUser, err := h.queries.GetUserByEmail(c.Context(), pgtype.Text{String: identifier, Valid: true})
+		if err == nil {
+			return c.JSON(fiber.Map{"exists": true, "user": emailUser})
+		}
 	}
 
 	if err != nil {
@@ -78,7 +83,10 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.JSON(fiber.Map{"exists": true, "user": user})
+	
+	// Should not reach here, but return not found as fallback
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"exists": false})
+
 }
 
 // --- CREATE USER ---
