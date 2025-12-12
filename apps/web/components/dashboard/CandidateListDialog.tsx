@@ -44,15 +44,15 @@ export function CandidateListDialog({ jobId, jobTitle, open, onOpenChange }: Can
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 py-4 border-b border-gray-100">
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 py-4 border-b border-gray-100 shrink-0">
           <DialogTitle className="text-xl">Applicants for {jobTitle}</DialogTitle>
           <DialogDescription>
              Review and manage candidates for this role.
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 p-6">
+        <div className="flex-1 overflow-y-auto p-6">
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-10 space-y-3">
                     <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
@@ -124,7 +124,7 @@ export function CandidateListDialog({ jobId, jobTitle, open, onOpenChange }: Can
                     ))}
                 </div>
             )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
