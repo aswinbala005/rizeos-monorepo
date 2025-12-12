@@ -45,7 +45,9 @@ function useFayeScreening() {
             const appRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applications/recruiter/${userData.user.id}`);
             if (!appRes.ok) throw new Error("Fetch failed");
             return appRes.json();
-        }
+        },
+        refetchInterval: 10000, // Auto-refresh every 10 seconds  
+        refetchOnWindowFocus: true, // Refresh when window regains focus
     });
 }
 
