@@ -1,12 +1,3 @@
-Of course. Here is the `README.md` file for the `apps/web` directory, written strictly in Markdown format as requested.
-
----
-
-### **File: `apps/web/README.md`**
-
-*(Place this file inside the `apps/web/` directory)*
-
-```markdown
 # GrindLink Frontend (Web App)
 
 This is the Next.js 14 frontend for GrindLink, built with the App Router. It serves as the primary user interface for both Job Seekers and Recruiters, featuring dynamic dashboards, Web3 wallet integration, and AI-powered features.
