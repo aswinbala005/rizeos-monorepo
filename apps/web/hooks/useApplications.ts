@@ -13,23 +13,37 @@ export function useApplications() {
       const userEmail = localStorage.getItem("user_email") || localStorage.getItem("seeker_email");
       const identifier = userEmail || address;
 
+      console.log("🔍 useApplications Debug:", { userEmail, address, identifier });
+
       if (!identifier) {
+        console.log("❌ No identifier found");
         return [];
       }
 
       // 1. Get User ID
       const userRes = await fetch(`${API_URL}/users/${identifier}`);
       const userData = await userRes.json();
-      if (!userData.exists) return [];
+      console.log("👤 User data:", userData);
+      
+      if (!userData.exists) {
+        console.log("❌ User doesn't exist");
+        return [];
+      }
 
       // 2. Fetch Applications using User ID
       const res = await fetch(`${API_URL}/applications/${userData.user.id}`);
-      if (!res.ok) throw new Error("Failed to fetch applications");
+      console.log("📝 Applications fetch response:", res.status, res.ok);
+      
+      if (!res.ok) {
+        console.error("❌ Failed to fetch applications:", res.status);
+        throw new Error("Failed to fetch applications");
+      }
       
       const data = await res.json();
+      console.log("📋 Raw applications data:", data);
       
       // 3. Transform Data for UI with all job details
-      return data.map((app: any) => ({
+      const transformed = data.map((app: any) => ({
         id: app.id,
         role: app.job_title,
         company: app.company_name || "Company Name",
@@ -45,6 +59,9 @@ export function useApplications() {
         is_unpaid: app.is_unpaid,
         description: app.job_description,
       }));
+      
+      console.log("✅ Transformed applications:", transformed);
+      return transformed;
     },
   });
 }
