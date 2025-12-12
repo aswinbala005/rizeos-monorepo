@@ -445,6 +445,14 @@ function CandidateProfileDialog({ candidate, app, isOpen, onClose }: { candidate
 
 
 
+                    {/* Bio */}
+                    <div>
+                         <h4 className="font-semibold text-gray-900 mb-2">About</h4>
+                         <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+                            {effectiveCandidate.bio || "No bio available."}
+                         </p>
+                    </div>
+
                     {/* Skills */}
                     <div>
                         <h4 className="font-semibold text-gray-900 mb-2">Top Skills</h4>
