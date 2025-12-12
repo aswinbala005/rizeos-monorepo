@@ -14,7 +14,7 @@ export default function RecruiterLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       {!isOnboarding && <RecruiterNavbar />}
-      <main className={isOnboarding ? "flex items-center justify-center min-h-screen p-6" : "max-w-7xl mx-auto p-6"}>
+      <main className={isOnboarding ? "max-w-7xl mx-auto p-6 flex items-center justify-center min-h-[calc(100vh-80px)]" : "max-w-7xl mx-auto p-6"}>
         {children}
       </main>
     </div>
