@@ -14,6 +14,12 @@ SELECT
     a.match_score,
     j.title as job_title, 
     j.description as job_description,
+    j.location_city,
+    j.location_type,
+    j.salary_min,
+    j.salary_max,
+    j.currency,
+    j.is_unpaid,
     u.organization_name as company_name -- <--- Get this from the USERS table
 FROM applications a
 JOIN jobs j ON a.job_id = j.id

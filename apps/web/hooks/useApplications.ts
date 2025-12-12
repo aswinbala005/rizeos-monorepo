@@ -7,11 +7,18 @@ export function useApplications() {
   const { address } = useAccount();
 
   return useQuery({
-    queryKey: ["applications", address],
-    enabled: !!address, // Only run if wallet is connected
+    queryKey: ["applications"],
     queryFn: async () => {
+      // Get user identifier (email from login or wallet address)
+      const userEmail = localStorage.getItem("user_email") || localStorage.getItem("seeker_email");
+      const identifier = userEmail || address;
+
+      if (!identifier) {
+        return [];
+      }
+
       // 1. Get User ID
-      const userRes = await fetch(`${API_URL}/users/${address}`);
+      const userRes = await fetch(`${API_URL}/users/${identifier}`);
       const userData = await userRes.json();
       if (!userData.exists) return [];
 
@@ -21,14 +28,22 @@ export function useApplications() {
       
       const data = await res.json();
       
-      // 3. Transform Data for UI
+      // 3. Transform Data for UI with all job details
       return data.map((app: any) => ({
         id: app.id,
         role: app.job_title,
-        company: "Nexus Tech", // Placeholder (DB join needed later)
-        status: app.status, // SENT, VIEWED, etc.
+        company: app.company_name || "Company Name",
+        status: app.status || "SENT",
         date: new Date(app.created_at).toLocaleDateString(),
-        match: app.match_score
+        createdAt: app.created_at,
+        match: app.match_score,
+        location_city: app.location_city,
+        location_type: app.location_type,
+        salary_min: app.salary_min,
+        salary_max: app.salary_max,
+        currency: app.currency || "INR",
+        is_unpaid: app.is_unpaid,
+        description: app.job_description,
       }));
     },
   });

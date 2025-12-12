@@ -120,7 +120,7 @@ export default function ApplicationsPage() {
 
       {/* STATUS TRACKER DIALOG */}
       <Dialog open={!!selectedApp} onOpenChange={() => setSelectedApp(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
             <DialogHeader>
                 <DialogTitle>Application Status</DialogTitle>
                 <DialogDescription>
@@ -128,7 +128,42 @@ export default function ApplicationsPage() {
                 </DialogDescription>
             </DialogHeader>
 
-            <div className="py-6 space-y-6">
+            {/* Job Details Section */}
+            <div className="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-200">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-gray-500 font-medium">Organization</p>
+                  <p className="text-gray-900 font-semibold">{selectedApp?.company || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 font-medium">Location</p>
+                  <p className="text-gray-900 font-semibold">
+                    {selectedApp?.location_city || "Remote"} • {selectedApp?.location_type || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500 font-medium">Salary</p>
+                  <p className="text-gray-900 font-semibold">
+                    {selectedApp?.is_unpaid ? (
+                      "Unpaid"
+                    ) : selectedApp?.salary_min && selectedApp?.salary_max ? (
+                      `${selectedApp.currency} ${selectedApp.salary_min.toLocaleString()} - ${selectedApp.salary_max.toLocaleString()}`
+                    ) : (
+                      "Not disclosed"
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500 font-medium">Applied On</p>
+                  <p className="text-gray-900 font-semibold">{selectedApp?.date}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Tracker */}
+            <div className="py-4">
+              <h4 className="font-semibold text-gray-900 mb-4">Application Progress</h4>
+              <div className="space-y-6">
                 {["SENT", "DELIVERED", "IN_REVIEW", "VIEWED", "DECISION"].map((stepKey, index) => {
                     const config = statusConfig[stepKey as keyof typeof statusConfig];
                     const currentStatusKey = (selectedApp?.status || "SENT") as keyof typeof statusConfig;
@@ -163,6 +198,7 @@ export default function ApplicationsPage() {
                         </div>
                     );
                 })}
+              </div>
             </div>
 
             <DialogFooter>

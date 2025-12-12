@@ -180,6 +180,12 @@ SELECT
     a.match_score,
     j.title as job_title, 
     j.description as job_description,
+    j.location_city,
+    j.location_type,
+    j.salary_min,
+    j.salary_max,
+    j.currency,
+    j.is_unpaid,
     u.organization_name as company_name -- <--- Get this from the USERS table
 FROM applications a
 JOIN jobs j ON a.job_id = j.id
@@ -195,6 +201,12 @@ type GetApplicationsByCandidateRow struct {
 	MatchScore     pgtype.Int4        `json:"match_score"`
 	JobTitle       string             `json:"job_title"`
 	JobDescription string             `json:"job_description"`
+	LocationCity   pgtype.Text        `json:"location_city"`
+	LocationType   pgtype.Text        `json:"location_type"`
+	SalaryMin      pgtype.Int4        `json:"salary_min"`
+	SalaryMax      pgtype.Int4        `json:"salary_max"`
+	Currency       pgtype.Text        `json:"currency"`
+	IsUnpaid       pgtype.Bool        `json:"is_unpaid"`
 	CompanyName    pgtype.Text        `json:"company_name"`
 }
 
@@ -214,6 +226,12 @@ func (q *Queries) GetApplicationsByCandidate(ctx context.Context, candidateID pg
 			&i.MatchScore,
 			&i.JobTitle,
 			&i.JobDescription,
+			&i.LocationCity,
+			&i.LocationType,
+			&i.SalaryMin,
+			&i.SalaryMax,
+			&i.Currency,
+			&i.IsUnpaid,
 			&i.CompanyName,
 		); err != nil {
 			return nil, err
