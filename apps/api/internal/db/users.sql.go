@@ -17,7 +17,9 @@ INSERT INTO users (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, wallet_address, email, role, karma, is_pro, created_at, updated_at, full_name, password_hash, bio, skills, experience, projects, job_role, education, phone, organization_name, organization_location, organization_bio, professional_email
+RETURNING id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+          experience, projects, education, job_role, phone, organization_name, 
+          organization_location, organization_bio, professional_email, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -28,7 +30,29 @@ type CreateUserParams struct {
 	PasswordHash  pgtype.Text `json:"password_hash"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+type CreateUserRow struct {
+	ID                   pgtype.UUID        `json:"id"`
+	WalletAddress        pgtype.Text        `json:"wallet_address"`
+	Email                pgtype.Text        `json:"email"`
+	Role                 UserRole           `json:"role"`
+	FullName             pgtype.Text        `json:"full_name"`
+	PasswordHash         pgtype.Text        `json:"password_hash"`
+	Bio                  pgtype.Text        `json:"bio"`
+	Skills               pgtype.Text        `json:"skills"`
+	Experience           pgtype.Text        `json:"experience"`
+	Projects             []byte             `json:"projects"`
+	Education            pgtype.Text        `json:"education"`
+	JobRole              pgtype.Text        `json:"job_role"`
+	Phone                pgtype.Text        `json:"phone"`
+	OrganizationName     pgtype.Text        `json:"organization_name"`
+	OrganizationLocation pgtype.Text        `json:"organization_location"`
+	OrganizationBio      pgtype.Text        `json:"organization_bio"`
+	ProfessionalEmail    pgtype.Text        `json:"professional_email"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.WalletAddress,
 		arg.Email,
@@ -36,29 +60,27 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.FullName,
 		arg.PasswordHash,
 	)
-	var i User
+	var i CreateUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.WalletAddress,
 		&i.Email,
 		&i.Role,
-		&i.Karma,
-		&i.IsPro,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.FullName,
 		&i.PasswordHash,
 		&i.Bio,
 		&i.Skills,
 		&i.Experience,
 		&i.Projects,
-		&i.JobRole,
 		&i.Education,
+		&i.JobRole,
 		&i.Phone,
 		&i.OrganizationName,
 		&i.OrganizationLocation,
 		&i.OrganizationBio,
 		&i.ProfessionalEmail,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

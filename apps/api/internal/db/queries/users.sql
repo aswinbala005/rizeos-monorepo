@@ -4,7 +4,9 @@ INSERT INTO users (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING *;
+RETURNING id, wallet_address, email, role, full_name, password_hash, bio, skills, 
+          experience, projects, education, job_role, phone, organization_name, 
+          organization_location, organization_bio, professional_email, created_at, updated_at;
 
 -- name: GetUserByWallet :one
 SELECT id, wallet_address, email, role, full_name, password_hash, bio, skills, 
