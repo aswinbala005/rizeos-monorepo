@@ -10,12 +10,13 @@ GrindLink is a next-generation hiring platform that bridges Web2 professional da
 
 ---
 
-## 🚀 Live Demo
+## 🚀 Live Deployment
 
-This project is deployed and running in real-time on Render.
+This project is deployed and running in real-time.
 
-*   **Frontend (Next.js):** [**https://grindlink-web.onrender.com**](https://grindlink-web.onrender.com)
-*   **Backend API (Go):** The frontend is configured to communicate with the live API.
+*   **Frontend (Next.js):** [**https://grindlink-web.onrender.com**](https://grindlink-web.onrender.com) (Deployed as a Web Service on Render)
+*   **Backend API (Go):** The frontend communicates with the live Go API, also deployed as a separate Web Service on Render.
+*   **Database (Postgres):** Hosted on [**Neon**](https://neon.tech), a serverless PostgreSQL platform.
 
 ---
 
@@ -23,7 +24,7 @@ This project is deployed and running in real-time on Render.
 
 1.  [Overview](#-overview)
 2.  [Key Features](#-key-features)
-3.  [Tech Stack](#-tech-stack)
+3.  [Comprehensive Tech Stack](#-comprehensive-tech-stack)
 4.  [System Workflows](#-system-workflows)
 5.  [Local Development Setup](#-local-development-setup)
 6.  [Environment Variables](#-environment-variables)
@@ -57,19 +58,39 @@ GrindLink is designed to solve the biggest problems in modern tech recruiting: r
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Comprehensive Tech Stack
 
-| Component | Technology | Description |
+### **Frontend (`apps/web`)**
+| Category | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Web** | Next.js 14 (App Router) | React framework with Server Components. |
-| **API** | Go (Golang) 1.25 | High-performance backend service. |
-| **Web3** | Wagmi / RainbowKit | Wallet connection and interaction. |
-| **Styling** | Tailwind CSS + Shadcn UI | Modern, accessible component library. |
-| **Database** | PostgreSQL + `pgvector` | Relational data and vector embeddings for AI. |
-| **ORM/DAO** | `sqlc` | Generates type-safe Go code from raw SQL queries. |
-| **AI** | Cerebras (Llama 3.3) | LLM for resume parsing and agent logic. |
-| **Build System**| Turborepo | High-performance build system for monorepos. |
-| **Deployment**| Render | Cloud platform for deploying web apps and services. |
+| **Framework** | Next.js 14 (App Router) | SSR, Routing, and full-stack capabilities. |
+| **Language** | TypeScript | Type safety and improved developer experience. |
+| **Styling** | Tailwind CSS & Shadcn UI | Utility-first CSS and a library of accessible components. |
+| **State/Data** | TanStack Query (React Query) | Server-state management, caching, and data fetching. |
+| **Web3** | Wagmi, Viem, RainbowKit | Wallet connection, contract interaction, and chain management. |
+| **Forms** | React Hook Form & Zod | Performant form handling and schema validation. |
+| **Animation** | Framer Motion | Declarative animations for a fluid user experience. |
+| **Charts** | Recharts | Data visualization for analytics dashboards. |
+
+### **Backend (`apps/api`)**
+| Category | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Language** | Go (Golang) 1.25 | High-performance, concurrent API development. |
+| **Framework** | Fiber v2 | Express.js-inspired, high-performance web framework for Go. |
+| **Database** | PostgreSQL (hosted on **Neon**) | Serverless, scalable Postgres for relational data. |
+| **DB Driver** | `pgx/v5` | High-performance PostgreSQL driver for Go. |
+| **ORM/DAO** | `sqlc` | Generates type-safe Go code directly from SQL queries. |
+| **Vector Search**| `pgvector` Extension | Enables semantic search and AI-powered matching. |
+| **AI/LLM** | Cerebras (Llama 3.3) | Powers resume parsing and AI agent logic. |
+| **Auth** | `bcrypt` (Go Crypto) | Secure password hashing and comparison. |
+
+### **Platform & Tooling**
+| Category | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Monorepo** | Turborepo | High-performance build system for managing the monorepo. |
+| **Deployment** | Render | Cloud platform for deploying the Next.js and Go services. |
+| **Database** | Neon | Serverless PostgreSQL hosting. |
+| **File Storage**| UploadThing | Manages PDF resume uploads and storage. |
 
 ---
 
@@ -79,9 +100,9 @@ GrindLink is designed to solve the biggest problems in modern tech recruiting: r
 This is a core feature that demonstrates the power of our AI integration.
 
 1.  **Upload:** A user uploads their PDF resume on the frontend.
-2.  **Storage:** The file is sent to `UploadThing`, which stores it and returns a secure URL.
+2.  **Storage:** The file is sent to **UploadThing**, which stores it and returns a secure URL.
 3.  **API Call:** The frontend sends this URL to our Go backend at the `/api/v1/parse-resume` endpoint.
-4.  **AI Processing:** The backend downloads the PDF, extracts the text, and sends it to the Cerebras AI with a structured prompt.
+4.  **AI Processing:** The backend downloads the PDF, extracts the text, and sends it to the **Cerebras AI** with a structured prompt.
 5.  **Response:** The AI returns a clean JSON object with the candidate's skills, experience, projects, and more.
 6.  **Auto-Fill:** The frontend uses this JSON to populate the entire profile form, which the user can then review and submit.
 
@@ -92,7 +113,7 @@ This is a core feature that demonstrates the power of our AI integration.
 ### Prerequisites
 *   Node.js 18+
 *   Go 1.25+
-*   PostgreSQL (with the `pgvector` extension enabled)
+*   PostgreSQL (or a connection string from a Neon dev branch)
 *   Turbo CLI (`npm install -g turbo`)
 
 ### Installation
@@ -109,8 +130,8 @@ This is a core feature that demonstrates the power of our AI integration.
     ```
 
 3.  **Database Setup:**
-    *   Ensure your local PostgreSQL instance is running.
-    *   Execute the SQL migration files located in `apps/api/migrations` to create the necessary tables and types.
+    *   Ensure your local PostgreSQL instance is running (with `pgvector` enabled) OR get your connection string from Neon.
+    *   Execute the SQL migration files located in `apps/api/migrations` to create the schema.
 
 4.  **Run the Monorepo:**
     ```bash
@@ -128,5 +149,6 @@ You will need to create two environment files for local development.
 ### Backend (`apps/api/.env`)
 ```env
 PORT=8080
-DATABASE_URL=postgres://user:password@localhost:5432/rizeos?sslmode=disable
+# Replace with your Neon connection string or local Postgres URL
+DATABASE_URL=postgres://user:password@host:port/dbname?sslmode=require
 CEREBRAS_API_KEY=your_cerebras_ai_key
