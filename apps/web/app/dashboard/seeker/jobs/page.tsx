@@ -46,12 +46,19 @@ export default function JobFeed() {
   }, [jobs, searchQuery, sortBy]);
 
   const handleApply = async (job: any) => {
-    if (!address) {
-        alert("Please connect wallet first");
-        return;
-    }
     try {
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${address}`);
+        // Get user email from localStorage (from login)
+        const userEmail = localStorage.getItem("user_email") || localStorage.getItem("seeker_email");
+        
+        if (!userEmail && !address) {
+            alert("Please log in or connect wallet first");
+            return;
+        }
+
+        // Use email if logged in, otherwise use wallet address
+        const identifier = userEmail || address;
+        
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${identifier}`);
         const userData = await userRes.json();
         if (!userData.exists) {
             alert("User account not found. Please register.");
@@ -63,11 +70,12 @@ export default function JobFeed() {
             body: JSON.stringify({
                 job_id: job.id,
                 candidate_id: userData.user.id,
-                match_score: job.match,
+                match_score: job.match_score || 50,
                 gateway_answer: "Auto-applied via Feed" 
             })
         });
         if (response.ok) {
+            alert("Application submitted successfully!");
             router.push("/dashboard/seeker/applications");
         } else {
             const err = await response.json();
