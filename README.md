@@ -20,14 +20,13 @@ This project is deployed and running in real-time.
 
 ---
 
-## 📚 Table of Contents
+## 📚 Documentation Index
 
-1.  [Overview](#-overview)
-2.  [Key Features](#-key-features)
-3.  [Comprehensive Tech Stack](#-comprehensive-tech-stack)
-4.  [System Workflows](#-system-workflows)
-5.  [Local Development Setup](#-local-development-setup)
-6.  [Environment Variables](#-environment-variables)
+This repository is a **Turborepo** monorepo. Detailed documentation for each application can be found below:
+
+- **[Backend API Documentation](./apps/api/README.md)**: A deep dive into the Go, Fiber, PostgreSQL, and AI logic.
+- **[Frontend Web Documentation](./apps/web/README.md)**: A deep dive into the Next.js, TypeScript, and Web3 architecture.
+- **[System Workflows](./docs/WORKFLOWS.md)**: A detailed breakdown of how the services interact for key features.
 
 ---
 
@@ -38,23 +37,6 @@ GrindLink is designed to solve the biggest problems in modern tech recruiting: r
 *   **AI-First Approach:** We use Large Language Models (Cerebras/Llama 3.3) to parse resumes, generate professional summaries, and power our autonomous sourcing and screening agents.
 *   **Proof-of-Skill:** Instead of relying solely on resumes, our platform is built to integrate on-chain and off-chain proof of a candidate's abilities.
 *   **Hybrid Identity:** Users can sign up with a traditional email/password or connect a crypto wallet, binding their professional profile to a decentralized identity.
-
----
-
-## ✨ Key Features
-
-### For Job Seekers (`CANDIDATE`)
-*   **AI-Powered Onboarding:** Upload your resume (PDF) and have your entire profile auto-filled in seconds.
-*   **Smart Job Matching:** Our custom algorithm scores and ranks jobs based on a deep understanding of your skills and career goals, not just keyword matching.
-*   **Application Tracker:** A visual timeline to track your application status from "Sent" to "Viewed" to "Decision".
-*   **Web3 Integration:** Connect your wallet to build an on-chain reputation.
-
-### For Recruiters (`RECRUITER`)
-*   **Autonomous AI Agents:**
-    *   **Agent Tracer (Sourcing):** Use natural language to find the perfect candidates (e.g., "Find me a Go developer with experience in fintech").
-    *   **Agent Faye (Screening):** Automatically screens and buckets all applicants into "High Signal," "Potential Fit," and "Low Signal" based on their match score.
-*   **Analytics Dashboard:** Visualize your hiring pipeline with real-time data on application volume and job performance using `Recharts`.
-*   **Seamless Job Posting:** A clean, multi-step interface to post, manage, close, and reopen job listings.
 
 ---
 
@@ -91,20 +73,6 @@ GrindLink is designed to solve the biggest problems in modern tech recruiting: r
 | **Deployment** | Render | Cloud platform for deploying the Next.js and Go services. |
 | **Database** | Neon | Serverless PostgreSQL hosting. |
 | **File Storage**| UploadThing | Manages PDF resume uploads and storage. |
-
----
-
-## 🔄 System Workflows
-
-### The AI Resume Onboarding Flow
-This is a core feature that demonstrates the power of our AI integration.
-
-1.  **Upload:** A user uploads their PDF resume on the frontend.
-2.  **Storage:** The file is sent to **UploadThing**, which stores it and returns a secure URL.
-3.  **API Call:** The frontend sends this URL to our Go backend at the `/api/v1/parse-resume` endpoint.
-4.  **AI Processing:** The backend downloads the PDF, extracts the text, and sends it to the **Cerebras AI** with a structured prompt.
-5.  **Response:** The AI returns a clean JSON object with the candidate's skills, experience, projects, and more.
-6.  **Auto-Fill:** The frontend uses this JSON to populate the entire profile form, which the user can then review and submit.
 
 ---
 
