@@ -7,7 +7,9 @@ async function handler(req: NextRequest) {
   // req.nextUrl.pathname is like "/api/v1/users"
   // We want to send it to "http://127.0.0.1:8080/api/v1/users"
   // So we just append the pathname to the internal base URL.
-  const targetUrl = `${INTERNAL_API_URL}${req.nextUrl.pathname}${req.nextUrl.search}`;
+  // Ensure no double slashes
+  const baseUrl = INTERNAL_API_URL.endsWith("/") ? INTERNAL_API_URL.slice(0, -1) : INTERNAL_API_URL;
+  const targetUrl = `${baseUrl}${req.nextUrl.pathname}${req.nextUrl.search}`;
 
   console.log(`🔀 Proxying: ${req.method} ${req.nextUrl.pathname} -> ${targetUrl}`);
 
