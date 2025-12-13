@@ -1,4 +1,4 @@
-# GrindLink (RizeOS Monorepo)
+# GrindLink
 
 [![Status](https://img.shields.io/badge/status-live-brightgreen.svg)](https://grindlink-web.onrender.com)
 [![Stack](https://img.shields.io/badge/stack-Go_|_Next.js-blue.svg)](https://github.com/aswinbala005/rizeos-monorepo)
