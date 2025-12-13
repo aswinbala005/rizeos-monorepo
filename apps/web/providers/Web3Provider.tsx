@@ -18,6 +18,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import "@rainbow-me/rainbowkit/styles.css";
 
+// Hack to suppress WalletConnect warning
+if (typeof window !== "undefined") {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (args[0]?.toString().includes("WalletConnect Core is already initialized")) return;
+    originalWarn(...args);
+  };
+}
+
 const { wallets } = getDefaultWallets();
 
 const config = getDefaultConfig({
