@@ -4,22 +4,10 @@ const INTERNAL_API_URL = process.env.INTERNAL_API_URL || "http://127.0.0.1:8080"
 
 async function handler(req: NextRequest) {
   // 1. Construct the Destination URL
-  let baseUrl = INTERNAL_API_URL;
-  
-  // Fix: If INTERNAL_API_URL ends with /api/v1, but pathname also starts with it, we get duplication.
-  // We strip common API prefixes from the base URL to ensure clean appending.
-  if (baseUrl.endsWith("/api/v1")) {
-     baseUrl = baseUrl.slice(0, -7); // Remove /api/v1
-  } else if (baseUrl.endsWith("/api")) {
-     baseUrl = baseUrl.slice(0, -4); // Remove /api
-  }
-  
-  // Remove trailing slash from base if present
-  if (baseUrl.endsWith("/")) {
-    baseUrl = baseUrl.slice(0, -1);
-  }
-
-  const targetUrl = `${baseUrl}${req.nextUrl.pathname}${req.nextUrl.search}`;
+  // req.nextUrl.pathname is like "/api/v1/users"
+  // We want to send it to "http://127.0.0.1:8080/api/v1/users"
+  // So we just append the pathname to the internal base URL.
+  const targetUrl = `${INTERNAL_API_URL}${req.nextUrl.pathname}${req.nextUrl.search}`;
 
   console.log(`🔀 Proxying: ${req.method} ${req.nextUrl.pathname} -> ${targetUrl}`);
 
