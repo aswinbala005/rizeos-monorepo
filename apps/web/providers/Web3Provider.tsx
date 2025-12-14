@@ -18,12 +18,35 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import "@rainbow-me/rainbowkit/styles.css";
 
-// Hack to suppress WalletConnect warning
+// Hack to suppress WalletConnect and Browser Extension warnings
 if (typeof window !== "undefined") {
   const originalWarn = console.warn;
+  const originalError = console.error;
+  const originalGroupCollapsed = console.groupCollapsed;
+
+  const shouldSuppress = (msg: any) => {
+    const txt = msg?.toString() || "";
+    return (
+      txt.includes("WalletConnect Core is already initialized") ||
+      txt.includes("SES Removing") ||
+      txt.includes("lockdown-install") ||
+      txt.includes("intrinsics")
+    );
+  };
+
   console.warn = (...args) => {
-    if (args[0]?.toString().includes("WalletConnect Core is already initialized")) return;
+    if (shouldSuppress(args[0])) return;
     originalWarn(...args);
+  };
+
+  console.error = (...args) => {
+    if (shouldSuppress(args[0])) return;
+    originalError(...args);
+  };
+
+  console.groupCollapsed = (...args) => {
+    if (shouldSuppress(args[0])) return;
+    originalGroupCollapsed(...args);
   };
 }
 
