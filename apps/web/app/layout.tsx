@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Web3Provider } from "../providers/Web3Provider";
+import dynamic from "next/dynamic";
+
+const Web3Provider = dynamic(
+  () => import("../providers/Web3Provider").then((mod) => mod.Web3Provider),
+  { ssr: false }
+);
 
 const inter = Inter({ subsets: ["latin"] });
 
