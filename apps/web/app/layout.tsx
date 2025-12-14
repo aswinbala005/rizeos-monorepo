@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning> {/* REMOVED className="dark" */}
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <Web3Provider>
           {children}
         </Web3Provider>
