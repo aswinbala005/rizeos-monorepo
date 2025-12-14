@@ -65,7 +65,7 @@ func (s *Server) setupMiddleware() {
 	
 	// Explicit CORS Config
 	s.router.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000,https://grindlink-web.onrender.com",
+		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
