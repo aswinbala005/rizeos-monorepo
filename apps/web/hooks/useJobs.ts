@@ -64,6 +64,7 @@ export function useJobs() {
             location: `${job.location_city || "India"} (${job.location_type})`,
             stack: skillsArray,
             match: matchScore, 
+            createdAt: job.created_at,
             date: new Date(job.created_at).toISOString().split('T')[0],
             mission: job.job_summary || "No mission statement provided.",
             description: job.description,

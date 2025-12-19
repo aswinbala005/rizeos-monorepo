@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 
+
+
 	"github.com/aswinbala005/rizeos/api/internal/db"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -18,6 +20,13 @@ type JobHandler struct {
 	queries  *db.Queries
 	validate *validator.Validate
 }
+
+
+// // TimeResponse defines the structure for our JSON output
+// type TimeResponse struct {
+//     CurrentTime time.Time `json:"current_time"`
+//     FormattedTime string  `json:"formatted_time"`
+// }
 
 func NewJobHandler(queries *db.Queries) *JobHandler {
 	return &JobHandler{
@@ -310,3 +319,4 @@ func (h *JobHandler) GetDashboardStats(c *fiber.Ctx) error {
 
 	return c.JSON(stats)
 }
+

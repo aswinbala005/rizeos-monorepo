@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useJobs } from "@/hooks/useJobs"; 
 import { useAccount } from "wagmi";
 import { MatchBadge } from "@/components/ui/match-badge";
+import { timeAgo } from "@/utils/format";
 
 export default function JobFeed() {
   const [selectedJob, setSelectedJob] = useState<any>(null); 
@@ -143,7 +144,7 @@ export default function JobFeed() {
                         </div>
                         <div>
                             <h3 className="font-bold text-lg text-gray-900">{job.role}</h3>
-                            <p className="text-gray-500 text-sm">{job.company}</p>
+                            <p className="text-gray-500 text-sm">{job.company} • {timeAgo(job.createdAt)}</p>
                         </div>
                     </div>
                     <MatchBadge score={job.match} />

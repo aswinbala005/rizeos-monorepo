@@ -64,6 +64,12 @@ type Application struct {
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
 
+type Event struct {
+	ID        int32              `json:"id"`
+	EventName string             `json:"event_name"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type Job struct {
 	ID                    pgtype.UUID        `json:"id"`
 	RecruiterID           pgtype.UUID        `json:"recruiter_id"`

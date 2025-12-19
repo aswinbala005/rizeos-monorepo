@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useApplications } from "@/hooks/useApplications";
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatDateTime } from "@/utils/format";
 
 const statusConfig = {
   SENT: { color: "bg-gray-100 text-gray-600", icon: Send, label: "Sent", step: 1 },
@@ -80,7 +81,7 @@ export default function ApplicationsPage() {
               <div key={app.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:shadow-md">
                 <div>
                   <h3 className="font-bold text-lg text-gray-900">{app.role}</h3>
-                  <p className="text-gray-500 text-sm">{app.company} • Applied {app.date}</p>
+                  <p className="text-gray-500 text-sm">{app.company} • Applied {formatDateTime(app.createdAt)}</p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -155,7 +156,7 @@ export default function ApplicationsPage() {
                 </div>
                 <div>
                   <p className="text-gray-500 font-medium">Applied On</p>
-                  <p className="text-gray-900 font-semibold">{selectedApp?.date}</p>
+                  <p className="text-gray-900 font-semibold">{selectedApp?.createdAt ? formatDateTime(selectedApp.createdAt) : "N/A"}</p>
                 </div>
               </div>
             </div>
